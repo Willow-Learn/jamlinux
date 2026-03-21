@@ -10,7 +10,7 @@ icon-theme='Yaru'
 [org/gnome/shell]
 
 # Enable these extensions for all users
-enabled-extensions=enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'switcher@landau.fi', 'monitor@astraext.github.io', 'caffeine@patapon.info', 'simplebreakreminder@castillodel.com', 'clipboard-indicator@tudmotu.com', 'gsconnect@andyholmes.github.io', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'transparent-top-bar@ftpix.com', 'blur-my-shell@aunetx']
+enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'switcher@landau.fi', 'monitor@astraext.github.io', 'caffeine@patapon.info', 'simplebreakreminder@castillodel.com', 'clipboard-indicator@tudmotu.com', 'gsconnect@andyholmes.github.io', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'transparent-top-bar@ftpix.com', 'blur-my-shell@aunetx']
 
 # favourite apps 
 favorite-apps=['chromium.desktop', 'org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Calculator.desktop', 'code.desktop', 'com.spotify.Client.desktop', 'libreoffice-startcenter.desktop', 'steam.desktop']

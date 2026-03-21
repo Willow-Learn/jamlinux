@@ -11,7 +11,7 @@ cd $BUILD_DIR
 
 # Initialize for Debian Testing (Forky)
 sudo lb config \
-    --distribution forky \
+    --distribution trixie \
     --archive-areas "main contrib non-free non-free-firmware" \
     --debian-installer live \
     --debian-installer-gui true \
@@ -21,13 +21,20 @@ sudo lb config \
     --iso-publisher "Jamie Munro" \
     --iso-preparer "live-build" \
     --linux-packages "linux-image linux-headers" \
-    --debian-installer-distribution forky
+    --debian-installer-distribution trixie
 
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},package-lists,bootloaders}
 mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes}
 mkdir -p config/includes.chroot/usr/local/bin
 mkdir -p config/includes.chroot/etc/systemd/system
+
+# Stage GNOME Shell extensions from the repository into the live image.
+if [[ -n "$(find "$BASE_DIR/extensions" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
+    cp -a "$BASE_DIR/extensions/." "$BUILD_DIR/config/includes.chroot/usr/share/gnome-shell/extensions/"
+else
+    echo "No local GNOME Shell extensions found in $BASE_DIR/extensions"
+fi
 
 # Copy apt sources
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/archives/forky.list.chroot"
@@ -114,4 +121,3 @@ sudo lb build
 #launch
 mkdir -p $BASE_DIR/dist
 cp *.iso $BASE_DIR/dist/jamlinux-$(date +%Y%m%d).iso
-# live-image-amd64.hybrid.iso (or similar name)
