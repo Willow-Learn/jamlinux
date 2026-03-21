@@ -1,0 +1,13 @@
+[org/gnome/nautilus/preferences]
+default-folder-viewer='icon-view'
+search-filter-time-type='last_modified'
+show-create-link=true
+show-delete-permanently=true
+
+[org/gnome/nautilus/list-view]
+default-column-order=['name', 'size', 'type', 'owner', 'group', 'permissions', 'where', 'date_modified', 'date_accessed', 'date_created', 'recency', 'starred']
+default-visible-columns=['name', 'size', 'date_modified']
+use-tree-view=true
+
+[org/gnome/nautilus/icon-view]
+captions=['size', 'date_modified', 'none']

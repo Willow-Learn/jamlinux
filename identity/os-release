@@ -1,0 +1,11 @@
+PRETTY_NAME="JamLinux 1.0 (Forky)"
+NAME="JamLinux"
+VERSION_ID="1.0"
+VERSION="1.0 (Forky)"
+VERSION_CODENAME=forky
+ID=jamlinux
+ID_LIKE=debian
+HOME_URL="https://github.com/yourusername/jamlinux"
+SUPPORT_URL="https://github.com/yourusername/jamlinux/issues"
+BUG_REPORT_URL="https://github.com/yourusername/jamlinux/issues"
+PRIVACY_POLICY_URL="https://yourdomain.com/privacy"

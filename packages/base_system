@@ -1,0 +1,41 @@
+# Live system components
+live-boot
+live-config
+live-config-systemd
+
+# Essential tools
+curl
+wget
+nano
+vim
+htop
+net-tools
+
+# Firmware (non-free)
+firmware-linux
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-realtek
+firmware-atheros
+firmware-iwlwifi
+firmware-intelwimax
+firmware-libertas
+firmware-ti-connectivity
+firmware-zd1211
+firmware-bnx2
+firmware-bnx2x
+firmware-brcm80211
+firmware-cavium
+firmware-crystalhd
+firmware-intel-sound
+firmware-iwlwifi
+firmware-libertas
+firmware-myricom
+firmware-netronome
+firmware-netxen
+firmware-qlogic
+firmware-samsung
+firmware-siano
+firmware-ti-connectivity
+amd64-microcode
+intel-microcode
