@@ -18,7 +18,6 @@ firmware-misc-nonfree
 firmware-realtek
 firmware-atheros
 firmware-iwlwifi
-firmware-intelwimax
 firmware-libertas
 firmware-ti-connectivity
 firmware-zd1211
@@ -26,7 +25,6 @@ firmware-bnx2
 firmware-bnx2x
 firmware-brcm80211
 firmware-cavium
-firmware-crystalhd
 firmware-intel-sound
 firmware-iwlwifi
 firmware-libertas

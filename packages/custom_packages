@@ -212,7 +212,6 @@ ifupdown
 inetutils-telnet
 iproute2
 iputils-ping
-isc-dhcp-client
 krb5-locales
 netcat-traditional
 network-manager
@@ -237,7 +236,6 @@ gnome-software-plugin-flatpak
 gnome-sound-recorder
 gnome-tweaks
 seahorse
-ulauncher
 yaru-theme-gtk
 yaru-theme-icon
 
@@ -247,7 +245,6 @@ gstreamer1.0-libav
 gstreamer1.0-plugins-bad
 gstreamer1.0-plugins-good
 gstreamer1.0-plugins-ugly
-gstreamer1.0-vaapi
 libavcodec-extra
 media-types
 transmission-gtk
@@ -269,7 +266,6 @@ mythes-en-us
 
 # Development tools and libraries
 build-essential
-code
 docker-compose
 docker.io
 gcc

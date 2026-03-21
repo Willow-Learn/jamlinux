@@ -1,4 +1,6 @@
 #! /bin/bash
+set -e
+
 export BASE_DIR="/home/jbm/JamLinux/"
 export BUILD_DIR="/home/jbm/JamLinux/build/$(date +%Y%m%d)"
 
@@ -72,6 +74,7 @@ cp "$BASE_DIR/backgrounds/default-bg-dark.jpg" "$BUILD_DIR/config/includes.chroo
 cp "$BASE_DIR/backgrounds/login-bg.jpg" "$BUILD_DIR/config/includes.chroot/usr/share/backgrounds/gdm/login-bg.jpg"
 
 #grub
+mkdir -p "$BUILD_DIR/config/includes.chroot/etc/default/grub.d"
 cp "$BASE_DIR/grub/grub_branding.cfg" "$BUILD_DIR/config/includes.chroot/etc/default/grub.d/99-custom.cfg"
 cp "$BASE_DIR/grub/grub_theme_hook.sh" "$BUILD_DIR/config/hooks/normal/0503-grub-theme.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0503-grub-theme.hook.chroot"
@@ -82,6 +85,7 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0504-installer-branding.hook.chroot"
 
 #first boot script
 cp "$BASE_DIR/first_boot.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-firstboot"
+mkdir -p "$BUILD_DIR/config/includes.chroot/etc/skel/.config/jamlinux"
 echo "# Marker file - delete after first boot setup" >> "$BUILD_DIR/config/includes.chroot/etc/skel/.config/jamlinux/firstboot-needed"
 cat >> "$BUILD_DIR/config/hooks/normal/0505-firstboot.hook.chroot" <<'EOF'
 #!/bin/bash
@@ -93,15 +97,17 @@ chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-firstboot"
 cp "$BASE_DIR/cleanup_hook.sh" "$BUILD_DIR/config/hooks/normal/0900-cleanup.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0900-cleanup.hook.chroot"
 
-
 #build the ISO
 cd $BUILD_DIR
+
+pwd
+echo "Building JamLinux ISO - this may take a while..."
 
 # Clean any previous builds
 sudo lb clean
 
 # Verify configuration
-lb config --print
+lb config
 
 sudo lb build
 
