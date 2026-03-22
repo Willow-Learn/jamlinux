@@ -78,7 +78,7 @@ cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.c
 cp "$BASE_DIR/packages/gnome" "$BUILD_DIR/config/package-lists/gnome.list.chroot"
 cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.list.chroot"
 
-#installer preseed
+# Installer preseed
 cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
 
 #dconf
