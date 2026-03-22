@@ -343,6 +343,7 @@ install_payload_file "$BASE_DIR/branding/jamlinux-login.oga" "usr/share/sounds/j
 install_payload_file "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "usr/share/gdm/greeter/autostart/jamlinux-startup-sound.desktop"
 install_payload_file "$BASE_DIR/systemd/jamlinux-startup-sound.conf" "etc/tmpfiles.d/jamlinux-startup-sound.conf"
 install_payload_file "$BASE_DIR/jamlinux-startup-sound.sh" "usr/local/bin/jamlinux-startup-sound"
+chmod +x "$PAYLOAD_DIR/usr/local/bin/jamlinux-startup-sound"
 mkdir -p "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants"
 ln -sf ../jamlinux-first-boot.service "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants/jamlinux-first-boot.service"
 

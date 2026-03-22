@@ -126,7 +126,7 @@ install_repo_package_with_dearmored_key() {
     chmod 0644 "$key_dest" "$list_dest"
 
     if package_installed "$package_name"; then
-        if run_with_retries "$name repository refresh" repo_update "$list_dest"; then
+        if run_with_retries "$name APT metadata refresh" default_repo_update; then
             log "Configured the $name repository for $package_name."
         else
             log "Registered the $name repository, but metadata refresh failed."
@@ -134,7 +134,7 @@ install_repo_package_with_dearmored_key() {
         return 0
     fi
 
-    if run_with_retries "$name repository refresh" repo_update "$list_dest"
+    if run_with_retries "$name APT metadata refresh" default_repo_update
     then
         if run_with_retries "$package_name install from $name" repo_install "$package_name"; then
             log "Installed $package_name from the $name repository."
@@ -169,7 +169,7 @@ install_repo_package() {
     chmod 0644 "$key_dest" "$list_dest"
 
     if package_installed "$package_name"; then
-        if run_with_retries "$name repository refresh" repo_update "$list_dest"; then
+        if run_with_retries "$name APT metadata refresh" default_repo_update; then
             log "Configured the $name repository for $package_name."
         else
             log "Registered the $name repository, but metadata refresh failed."
@@ -177,7 +177,7 @@ install_repo_package() {
         return 0
     fi
 
-    if run_with_retries "$name repository refresh" repo_update "$list_dest"
+    if run_with_retries "$name APT metadata refresh" default_repo_update
     then
         if run_with_retries "$package_name install from $name" repo_install "$package_name"; then
             log "Installed $package_name from the $name repository."
