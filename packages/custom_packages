@@ -394,6 +394,7 @@ virt-manager
 libvirt-daemon-system
 btrfs-assistant
 zsh
+gnome-multi-writer
 
 # Voice
 speech-dispatcher
