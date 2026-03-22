@@ -41,5 +41,6 @@ gsettings-desktop-schemas
 dconf-cli
 dconf-editor
 glib-networking
+wmctrl
 xdg-desktop-portal
 xdg-desktop-portal-gnome

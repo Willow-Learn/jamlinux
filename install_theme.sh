@@ -54,6 +54,32 @@ append_shell_override() {
     echo "  Patched $css_file"
 }
 
+rebuild_shell_resource() {
+    local theme_dir="$1"
+    local manifest
+    local target_resource="$theme_dir/gnome-shell-theme.gresource"
+    local system_resource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
+
+    [ -d "$theme_dir" ] || return 1
+
+    manifest="$(mktemp)"
+    {
+        printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+        printf '%s\n' '<gresources>'
+        printf '%s\n' '  <gresource prefix="/org/gnome/shell/theme">'
+        find "$theme_dir" -maxdepth 1 -type f ! -name '*.gresource' -printf '    <file>%f</file>\n' | sort
+        printf '%s\n' '  </gresource>'
+        printf '%s\n' '</gresources>'
+    } > "$manifest"
+
+    glib-compile-resources --sourcedir="$theme_dir" --target="$target_resource" "$manifest"
+    install -m 0644 "$target_resource" "$system_resource"
+    rm -f "$manifest"
+
+    echo "  Rebuilt $target_resource"
+    echo "  Updated $system_resource"
+}
+
 patched=0
 for css_file in \
     /usr/share/gnome-shell/theme/gnome-shell.css \
@@ -69,6 +95,14 @@ done
 
 if [ "$patched" -eq 0 ]; then
     echo "  Warning: no GNOME Shell CSS target found for Yaru patching."
+fi
+
+if [ -d /usr/share/gnome-shell/theme/Yaru ]; then
+    rebuild_shell_resource /usr/share/gnome-shell/theme/Yaru
+elif [ -d /usr/share/themes/Yaru/gnome-shell ]; then
+    rebuild_shell_resource /usr/share/themes/Yaru/gnome-shell
+else
+    echo "  Warning: no Yaru GNOME Shell theme directory found for gresource rebuild."
 fi
 
 echo "JamLinux theme setup complete."

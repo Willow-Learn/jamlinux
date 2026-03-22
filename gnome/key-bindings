@@ -2,3 +2,8 @@
 binding='<Control><Alt>t'
 command='x-terminal-emulator'
 name='Terminal'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
+binding='<Control>space'
+command='ulauncher-toggle'
+name='Ulauncher'
