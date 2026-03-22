@@ -4,6 +4,7 @@ set -eu
 export DEBIAN_FRONTEND=noninteractive
 
 repo_dir="/usr/local/src/jamlinux/repositories"
+ulauncher_deb_url="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 max_attempts="${JAMLINUX_EXTERNAL_RETRY_ATTEMPTS:-4}"
 initial_retry_delay="${JAMLINUX_EXTERNAL_RETRY_DELAY:-10}"
 
@@ -56,10 +57,27 @@ repo_update() {
         -o APT::Get::List-Cleanup="0"
 }
 
+default_repo_update() {
+    apt-get update
+}
+
 repo_install() {
     local package_name="$1"
 
     apt-get install -y --no-install-recommends "$package_name"
+}
+
+download_file() {
+    local url="$1"
+    local destination="$2"
+
+    curl -fsSL --retry 3 --retry-all-errors --output "$destination" "$url"
+}
+
+install_local_deb() {
+    local deb_path="$1"
+
+    apt-get install -y --no-install-recommends "$deb_path"
 }
 
 cleanup_repo_registration() {
@@ -101,5 +119,31 @@ install_repo_package() {
     fi
 }
 
+install_ulauncher_release() {
+    local download_dir="/var/tmp/jamlinux-external-packages"
+    local deb_path="$download_dir/ulauncher_5.15.15_all.deb"
+
+    mkdir -p "$download_dir"
+
+    if ! run_with_retries "APT metadata refresh for Ulauncher dependencies" default_repo_update; then
+        log "Skipping ulauncher: failed to refresh APT metadata for dependencies."
+        return 1
+    fi
+
+    if run_with_retries "Ulauncher release download" download_file "$ulauncher_deb_url" "$deb_path"
+    then
+        if run_with_retries "Ulauncher package install" install_local_deb "$deb_path"; then
+            log "Installed ulauncher from the pinned GitHub release package."
+            rm -f "$deb_path"
+        else
+            log "Skipping ulauncher: install from the pinned GitHub release failed."
+            return 1
+        fi
+    else
+        log "Skipping ulauncher: download from the pinned GitHub release failed."
+        return 1
+    fi
+}
+
 install_repo_package "VS Code" "code" "vscode.list" "vscode.asc"
-install_repo_package "Ulauncher" "ulauncher" "ulauncher.list" "ulauncher.asc"
+install_ulauncher_release

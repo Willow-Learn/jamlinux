@@ -3,7 +3,7 @@ Polished daily-driver desktop based on Debian Testing. Designed to look beautifu
    
 It aims to have strong out-the-box hardware support, all the applications you need, a full development stack, and b ready-to-go for gaming and multimedia.   
    
-Opinionated Gnome 3 desktop environment.  
+Opinionated Gnome 3 desktop environment, optimised for British English. 
    
 ## Build ISO
 ```
@@ -21,7 +21,7 @@ qemu-system-x86_64 \
   -cpu host \
   -smp 4 \
   -m 8192 \
-  -cdrom jamlinux-*.iso \
+  -cdrom dist/jamlinux-*.iso \
   -boot d \
   -display gtk,gl=on \
   -device virtio-vga

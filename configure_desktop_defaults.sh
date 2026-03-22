@@ -23,6 +23,15 @@ fi
 
 if [ -x /usr/bin/ptyxis ]; then
     update-alternatives --set x-terminal-emulator /usr/bin/ptyxis 2>/dev/null || true
+
+    mkdir -p /usr/local/share/applications
+    if [ -f /usr/share/applications/org.gnome.Ptyxis.desktop ]; then
+        sed \
+            -e 's/^Name=Ptyxis$/Name=Terminal/' \
+            -e 's/^Icon=org\.gnome\.Ptyxis$/Icon=utilities-terminal/' \
+            /usr/share/applications/org.gnome.Ptyxis.desktop \
+            > /usr/local/share/applications/org.gnome.Ptyxis.desktop
+    fi
 fi
 
 mkdir -p /etc/systemd/logind.conf.d

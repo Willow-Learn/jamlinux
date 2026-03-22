@@ -70,8 +70,6 @@ fi
 # Stage third-party repository metadata for a post-package install hook.
 cp "$BASE_DIR/sources/vscode.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.list"
 cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.asc"
-cp "$BASE_DIR/sources/ulauncher.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/ulauncher.list"
-cp "$BASE_DIR/sources/ulauncher.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/ulauncher.asc"
 
 #package lists
 cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.chroot"
@@ -98,6 +96,10 @@ chmod +x config/hooks/normal/0500-extensions.hook.chroot
 #theme hook
 cp "$BASE_DIR/install_theme.sh" "$BUILD_DIR/config/hooks/normal/0501-themes.hook.chroot"
 chmod +x config/hooks/normal/0501-themes.hook.chroot
+
+#default avatar hook
+cp "$BASE_DIR/install_default_avatar.sh" "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
+chmod +x "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
 
 #desktop defaults hook
 cp "$BASE_DIR/configure_desktop_defaults.sh" "$BUILD_DIR/config/hooks/normal/0502-defaults.hook.chroot"
@@ -134,6 +136,7 @@ cp "$BASE_DIR/backgrounds/login-bg.jpg" "$BUILD_DIR/config/includes.chroot/usr/s
 
 #branding
 cp "$BASE_DIR/branding/logo.png" "$BUILD_DIR/config/includes.chroot/usr/share/images/jamlinux/logo.png"
+cp "$BASE_DIR/branding/pp.png" "$BUILD_DIR/config/includes.chroot/usr/share/images/jamlinux/pp.png"
 mkdir -p "$BUILD_DIR/config/includes.chroot/usr/share/plymouth/themes/jamlinux"
 cp "$BASE_DIR/branding/logo.png" "$BUILD_DIR/config/includes.chroot/usr/share/plymouth/themes/jamlinux/logo.png"
 cp "$BASE_DIR/plymouth/jamlinux/jamlinux.plymouth" "$BUILD_DIR/config/includes.chroot/usr/share/plymouth/themes/jamlinux/jamlinux.plymouth"
