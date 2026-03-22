@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Setting up JamLinux visual identity (Yaru + patched GNOME Shell)..."
+echo "Setting up JamLinux visual identity (Adwaita-based GNOME Shell)..."
 
-# Fonts and Yaru are provided by the image package lists.
+# Fonts and desktop theme packages are provided by the image package lists.
 
 # Patch the system shell theme instead of relying on the User Themes extension.
 jamlinux_shell_override='/* JamLinux shell overrides */
@@ -81,28 +81,18 @@ rebuild_shell_resource() {
 }
 
 patched=0
-for css_file in \
-    /usr/share/gnome-shell/theme/gnome-shell.css \
-    /usr/share/gnome-shell/theme/Yaru/gnome-shell.css \
-    /usr/share/gnome-shell/theme/Yaru-dark/gnome-shell.css \
-    /usr/share/themes/Yaru/gnome-shell/gnome-shell.css \
-    /usr/share/themes/Yaru-dark/gnome-shell/gnome-shell.css
-do
-    if append_shell_override "$css_file"; then
-        patched=1
-    fi
-done
-
-if [ "$patched" -eq 0 ]; then
-    echo "  Warning: no GNOME Shell CSS target found for Yaru patching."
+if append_shell_override /usr/share/gnome-shell/theme/gnome-shell.css; then
+    patched=1
 fi
 
-if [ -d /usr/share/gnome-shell/theme/Yaru ]; then
-    rebuild_shell_resource /usr/share/gnome-shell/theme/Yaru
-elif [ -d /usr/share/themes/Yaru/gnome-shell ]; then
-    rebuild_shell_resource /usr/share/themes/Yaru/gnome-shell
+if [ "$patched" -eq 0 ]; then
+    echo "  Warning: no GNOME Shell CSS target found for default theme patching."
+fi
+
+if [ -d /usr/share/gnome-shell/theme ]; then
+    rebuild_shell_resource /usr/share/gnome-shell/theme
 else
-    echo "  Warning: no Yaru GNOME Shell theme directory found for gresource rebuild."
+    echo "  Warning: no GNOME Shell theme directory found for gresource rebuild."
 fi
 
 echo "JamLinux theme setup complete."

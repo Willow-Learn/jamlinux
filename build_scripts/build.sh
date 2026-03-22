@@ -70,6 +70,8 @@ fi
 # Stage third-party repository metadata for a post-package install hook.
 cp "$BASE_DIR/sources/vscode.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.list"
 cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.asc"
+cp "$BASE_DIR/sources/julians-package-repo.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.list"
+cp "$BASE_DIR/sources/julians-package-repo.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.asc"
 
 #package lists
 cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.chroot"

@@ -87,6 +87,38 @@ cleanup_repo_registration() {
     rm -f "$list_dest" "$key_dest"
 }
 
+install_repo_package_with_dearmored_key() {
+    local name="$1"
+    local package_name="$2"
+    local list_src="$repo_dir/$3"
+    local key_src="$repo_dir/$4"
+    local list_dest="/etc/apt/sources.list.d/$3"
+    local key_dest="/usr/share/keyrings/$5"
+
+    if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
+        log "Skipping $name: missing repository metadata."
+        return 0
+    fi
+
+    mkdir -p /usr/share/keyrings /etc/apt/sources.list.d
+    gpg --batch --yes --dearmor --output "$key_dest" "$key_src"
+    cp "$list_src" "$list_dest"
+    chmod 0644 "$key_dest" "$list_dest"
+
+    if run_with_retries "$name repository refresh" repo_update "$list_dest"
+    then
+        if run_with_retries "$package_name install from $name" repo_install "$package_name"; then
+            log "Installed $package_name from the $name repository."
+        else
+            log "Skipping $package_name: install failed after repository refresh."
+            cleanup_repo_registration "$list_dest" "$key_dest"
+        fi
+    else
+        log "Skipping $package_name: repository refresh failed."
+        cleanup_repo_registration "$list_dest" "$key_dest"
+    fi
+}
+
 install_repo_package() {
     local name="$1"
     local package_name="$2"
@@ -146,4 +178,5 @@ install_ulauncher_release() {
 }
 
 install_repo_package "VS Code" "code" "vscode.list" "vscode.asc"
+install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg"
 install_ulauncher_release

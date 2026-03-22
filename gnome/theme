@@ -1,5 +1,5 @@
 [org/gnome/desktop/interface]
-gtk-theme='Yaru'
+gtk-theme='adw-gtk3'
 icon-theme='Yaru'
 cursor-theme='Yaru'
 font-name='Inter 11'
@@ -7,6 +7,9 @@ document-font-name='Inter 12'
 monospace-font-name='JetBrains Mono 11'
 enable-animations=true
 color-scheme='default'
+
+[org/gnome/desktop/sound]
+theme-name='Yaru'
 
 # Background
 [org/gnome/desktop/background]
