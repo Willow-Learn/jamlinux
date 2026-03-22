@@ -1,0 +1,5 @@
+# Keep installs offline by skipping all installer networking.
+d-i netcfg/enable boolean false
+
+# Install only from the live media, without attempting to reach a package mirror.
+d-i apt-setup/use_mirror boolean false
