@@ -39,6 +39,11 @@ prompt_active = 0;
 status_line = "";
 message_line = "";
 message_is_action = 0;
+prompt_status_line = "";
+dots[0].opacity = 0.35;
+dots[1].opacity = 0.6;
+dots[2].opacity = 1.0;
+dots.tick = 0;
 
 fun TextImage(text, colour) {
     return Image.Text(text, colour.red, colour.green, colour.blue);
@@ -127,8 +132,44 @@ fun RepeatCharacter(character, count) {
     return local.output;
 }
 
+fun LoadingDotsY() {
+    return logo.y + logo.height + 16;
+}
+
+fun CreateLoadingDots() {
+    local.start_x = Window.GetX() + Window.GetWidth() / 2 - 22;
+
+    for (index = 0; index < 3; index++) {
+        dots[index].sprite = Sprite(TextImage(".", text_colours.normal));
+        dots[index].x = local.start_x + (index * 22);
+        dots[index].y = LoadingDotsY();
+        dots[index].sprite.SetPosition(dots[index].x, dots[index].y, 1001);
+        dots[index].sprite.SetOpacity(dots[index].opacity);
+    }
+}
+
+fun SetLoadingDotsOpacity(opacity) {
+    for (index = 0; index < 3; index++) {
+        if (dots[index].sprite)
+            dots[index].sprite.SetOpacity(opacity * dots[index].opacity);
+    }
+}
+
+fun AdvanceLoadingDots() {
+    local.first = dots[0].opacity;
+
+    dots[0].opacity = dots[1].opacity;
+    dots[1].opacity = dots[2].opacity;
+    dots[2].opacity = local.first;
+
+    for (index = 0; index < 3; index++) {
+        if (dots[index].sprite)
+            dots[index].sprite.SetOpacity(dots[index].opacity);
+    }
+}
+
 fun NormalMessageY() {
-    return logo.y + logo.height + 28;
+    return LoadingDotsY() + 26;
 }
 
 fun PromptMessageY() {
@@ -139,10 +180,26 @@ fun PromptBulletsY() {
     return PromptMessageY() + 28;
 }
 
+fun ShowPromptStatusLine(text, colour) {
+    prompt_status_line = text;
+
+    if (!prompt_status_line || prompt_status_line == "") {
+        if (prompt_status_label.sprite)
+            prompt_status_label.sprite.SetOpacity(0);
+        return;
+    }
+
+    prompt_status_label = ComposeLabel(prompt_status_line, colour, PromptBulletsY() + 28, 1002, prompt_status_label.sprite);
+}
+
 fun ShowStatusLine(text) {
     status_line = text;
-    if (prompt_active)
+    if (prompt_active) {
+        ShowPromptStatusLine(text, text_colours.normal);
         return;
+    }
+
+    SetLoadingDotsOpacity(1);
 
     if (!status_line || status_line == "") {
         if (status_label.sprite)
@@ -157,8 +214,10 @@ fun ShowMessageLine(text, is_action) {
     message_line = text;
     message_is_action = is_action;
     if (prompt_active) {
-        if (message_label.sprite)
-            message_label.sprite.SetOpacity(0);
+        if (is_action)
+            ShowPromptStatusLine(text, text_colours.action);
+        else
+            ShowPromptStatusLine(text, text_colours.normal);
         return;
     }
 
@@ -219,12 +278,15 @@ fun update_status_callback(status_text) {
 
 fun display_password_callback(prompt, bullets) {
     prompt_active = 1;
+    SetLoadingDotsOpacity(0);
     if (status_label.sprite)
         status_label.sprite.SetOpacity(0);
     if (message_label.sprite)
         message_label.sprite.SetOpacity(0);
     prompt_label = ComposeLabel(prompt, text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
     bullet_label = ComposeLabel(RepeatCharacter("*", bullets), text_colours.normal, PromptBulletsY(), 1002, bullet_label.sprite);
+    if (prompt_status_line != "")
+        ShowPromptStatusLine(prompt_status_line, text_colours.normal);
 }
 
 fun display_normal_callback() {
@@ -233,6 +295,10 @@ fun display_normal_callback() {
         prompt_label.sprite.SetOpacity(0);
     if (bullet_label.sprite)
         bullet_label.sprite.SetOpacity(0);
+    if (prompt_status_label.sprite)
+        prompt_status_label.sprite.SetOpacity(0);
+    prompt_status_line = "";
+    SetLoadingDotsOpacity(1);
     ShowStatusLine(status_line);
     ShowMessageLine(message_line, message_is_action);
 }
@@ -250,12 +316,19 @@ fun refresh_callback() {
     local.opacity += local.min_opacity;
     logo.sprite.SetOpacity(local.opacity);
     logo.sprite.SetPosition(logo.x, logo.y, 1000);
+
+    dots.tick++;
+    if (!prompt_active && dots.tick >= 14) {
+        dots.tick = 0;
+        AdvanceLoadingDots();
+    }
 }
 
 fun quit_callback() {
     logo.sprite.SetOpacity(1);
 }
 
+CreateLoadingDots();
 ShowStatusLine("Booting JamLinux");
 
 Plymouth.SetMessageFunction(message_callback);

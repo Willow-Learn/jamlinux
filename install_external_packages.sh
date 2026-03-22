@@ -7,6 +7,8 @@ repo_dir="/usr/local/src/jamlinux/repositories"
 ulauncher_deb_url="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 max_attempts="${JAMLINUX_EXTERNAL_RETRY_ATTEMPTS:-4}"
 initial_retry_delay="${JAMLINUX_EXTERNAL_RETRY_DELAY:-10}"
+persist_repos="${JAMLINUX_PERSIST_REPOS:-0}"
+strict_mode="${JAMLINUX_EXTERNAL_STRICT:-0}"
 
 log() {
     echo "[jamlinux external packages] $*"
@@ -16,6 +18,12 @@ refresh_certificates() {
     if command -v update-ca-certificates >/dev/null 2>&1; then
         update-ca-certificates >/dev/null 2>&1 || true
     fi
+}
+
+package_installed() {
+    local package_name="$1"
+
+    dpkg-query -W -f='${Status}' "$package_name" 2>/dev/null | grep -q "install ok installed"
 }
 
 run_with_retries() {
@@ -87,6 +95,18 @@ cleanup_repo_registration() {
     rm -f "$list_dest" "$key_dest"
 }
 
+preserve_or_cleanup_repo_registration() {
+    local list_dest="$1"
+    local key_dest="$2"
+
+    if [ "$persist_repos" -eq 1 ]; then
+        log "Leaving repository metadata in place for a future retry."
+        return
+    fi
+
+    cleanup_repo_registration "$list_dest" "$key_dest"
+}
+
 install_repo_package_with_dearmored_key() {
     local name="$1"
     local package_name="$2"
@@ -105,17 +125,28 @@ install_repo_package_with_dearmored_key() {
     cp "$list_src" "$list_dest"
     chmod 0644 "$key_dest" "$list_dest"
 
+    if package_installed "$package_name"; then
+        if run_with_retries "$name repository refresh" repo_update "$list_dest"; then
+            log "Configured the $name repository for $package_name."
+        else
+            log "Registered the $name repository, but metadata refresh failed."
+        fi
+        return 0
+    fi
+
     if run_with_retries "$name repository refresh" repo_update "$list_dest"
     then
         if run_with_retries "$package_name install from $name" repo_install "$package_name"; then
             log "Installed $package_name from the $name repository."
         else
             log "Skipping $package_name: install failed after repository refresh."
-            cleanup_repo_registration "$list_dest" "$key_dest"
+            preserve_or_cleanup_repo_registration "$list_dest" "$key_dest"
+            return 1
         fi
     else
         log "Skipping $package_name: repository refresh failed."
-        cleanup_repo_registration "$list_dest" "$key_dest"
+        preserve_or_cleanup_repo_registration "$list_dest" "$key_dest"
+        return 1
     fi
 }
 
@@ -137,23 +168,39 @@ install_repo_package() {
     cp "$list_src" "$list_dest"
     chmod 0644 "$key_dest" "$list_dest"
 
+    if package_installed "$package_name"; then
+        if run_with_retries "$name repository refresh" repo_update "$list_dest"; then
+            log "Configured the $name repository for $package_name."
+        else
+            log "Registered the $name repository, but metadata refresh failed."
+        fi
+        return 0
+    fi
+
     if run_with_retries "$name repository refresh" repo_update "$list_dest"
     then
         if run_with_retries "$package_name install from $name" repo_install "$package_name"; then
             log "Installed $package_name from the $name repository."
         else
             log "Skipping $package_name: install failed after repository refresh."
-            cleanup_repo_registration "$list_dest" "$key_dest"
+            preserve_or_cleanup_repo_registration "$list_dest" "$key_dest"
+            return 1
         fi
     else
         log "Skipping $package_name: repository refresh failed."
-        cleanup_repo_registration "$list_dest" "$key_dest"
+        preserve_or_cleanup_repo_registration "$list_dest" "$key_dest"
+        return 1
     fi
 }
 
 install_ulauncher_release() {
     local download_dir="/var/tmp/jamlinux-external-packages"
     local deb_path="$download_dir/ulauncher_5.15.15_all.deb"
+
+    if package_installed ulauncher; then
+        log "ulauncher is already installed."
+        return 0
+    fi
 
     mkdir -p "$download_dir"
 
@@ -177,6 +224,15 @@ install_ulauncher_release() {
     fi
 }
 
-install_repo_package "VS Code" "code" "vscode.list" "vscode.asc"
-install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg"
-install_ulauncher_release
+failures=0
+
+install_repo_package "VS Code" "code" "vscode.list" "vscode.asc" || failures=1
+install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg" || failures=1
+install_ulauncher_release || failures=1
+
+if [ "$failures" -ne 0 ]; then
+    log "One or more external packages could not be installed or refreshed."
+    if [ "$strict_mode" -eq 1 ]; then
+        exit 1
+    fi
+fi

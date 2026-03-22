@@ -1,8 +1,18 @@
 #! /bin/bash
 set -e
 
-export BASE_DIR="/home/jbm/JamLinux/"
-export BUILD_DIR="/home/jbm/JamLinux/build/$(date +%Y%m%d)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+export BUILD_DIR="$BASE_DIR/build/$(date +%Y%m%d)"
+
+install_payload_file() {
+    local source="$1"
+    local relative_path="$2"
+    local destination="$PAYLOAD_DIR/$relative_path"
+
+    mkdir -p "$(dirname "$destination")"
+    cp "$source" "$destination"
+}
 
 cleanup_live_build_mounts() {
     local build_root mount_point
@@ -50,6 +60,7 @@ sudo lb config \
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
+mkdir -p config/includes.binary/jamlinux-installer/rootfs
 mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes,grub/themes/jamlinux}
 mkdir -p config/includes.chroot/usr/share/images/jamlinux
 mkdir -p config/includes.chroot/usr/local/bin
@@ -72,6 +83,8 @@ cp "$BASE_DIR/sources/vscode.list.chroot" "$BUILD_DIR/config/includes.chroot/usr
 cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.asc"
 cp "$BASE_DIR/sources/julians-package-repo.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.list"
 cp "$BASE_DIR/sources/julians-package-repo.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.asc"
+cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/etc/apt/sources.list"
+cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/sources.list"
 
 #package lists
 cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.chroot"
@@ -101,6 +114,8 @@ chmod +x config/hooks/normal/0500-extensions.hook.chroot
 #theme hook
 cp "$BASE_DIR/install_theme.sh" "$BUILD_DIR/config/hooks/normal/0501-themes.hook.chroot"
 chmod +x config/hooks/normal/0501-themes.hook.chroot
+cp "$BASE_DIR/install_theme.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_theme.sh"
+chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_theme.sh"
 
 #default avatar hook
 cp "$BASE_DIR/install_default_avatar.sh" "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
@@ -128,6 +143,8 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0505-flatpak-apps.hook.chroot"
 #dconf hook
 cp "$BASE_DIR/update_dconf.sh" "$BUILD_DIR/config/hooks/normal/0506-dconf.hook.chroot"
 chmod +x config/hooks/normal/0506-dconf.hook.chroot
+cp "$BASE_DIR/update_dconf.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/update_dconf.sh"
+chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/update_dconf.sh"
 
 #identity
 cp "$BASE_DIR/identity/os-release" "$BUILD_DIR/config/includes.chroot/etc/os-release"
@@ -158,6 +175,10 @@ mkdir -p "$BUILD_DIR/config/includes.chroot/etc/tmpfiles.d"
 cp "$BASE_DIR/systemd/jamlinux-startup-sound.conf" "$BUILD_DIR/config/includes.chroot/etc/tmpfiles.d/jamlinux-startup-sound.conf"
 cp "$BASE_DIR/jamlinux-startup-sound.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
+cp "$BASE_DIR/configure_installed_system.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_installed_system.sh"
+chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_installed_system.sh"
+cp "$BASE_DIR/install_external_packages.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_external_packages.sh"
+chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_external_packages.sh"
 
 # bootloader splash
 mkdir -p "$BUILD_DIR/config/bootloaders/grub-pc/live-theme"
@@ -245,13 +266,13 @@ terminal-font: "Unifont Regular 16"
     width = 80%
     top = 52%
     height = 48%-80
-    item_color = "#a8a8a8"
+    item_color = "#d6e4f1"
 	item_font = "Unifont Regular 16"
-    selected_item_color= "#ffffff"
+    selected_item_color= "#f59e0b"
 	selected_item_font = "Unifont Regular 16"
-    item_height = 16
+    item_height = 24
     item_padding = 0
-    item_spacing = 4
+    item_spacing = 6
 	icon_width = 0
 	icon_heigh = 0
 	item_icon_space = 0
@@ -264,10 +285,10 @@ terminal-font: "Unifont Regular 16"
     height = 16
     width = 70%
     font = "Unifont Regular 16"
-    text_color = "#000000"
-    fg_color = "#ffffff"
-    bg_color = "#a8a8a8"
-    border_color = "#ffffff"
+    text_color = "#08111d"
+    fg_color = "#f59e0b"
+    bg_color = "#274156"
+    border_color = "#38bdf8"
     text = "@TIMEOUT_NOTIFICATION_LONG@"
 }
 EOF
@@ -287,25 +308,43 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0508-installer-branding.hook.chroot"
 #first boot script
 cp "$BASE_DIR/first-boot.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/first-boot.sh"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/first-boot.sh"
-cat > "$BUILD_DIR/config/includes.chroot/etc/systemd/system/jamlinux-first-boot.service" <<'EOF'
-[Unit]
-Description=Run JamLinux first-boot tasks
-Wants=network-online.target
-After=network-online.target
-ConditionPathExists=!/var/lib/jamlinux/first-boot-complete
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/first-boot.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF
+cp "$BASE_DIR/systemd/jamlinux-first-boot.service" "$BUILD_DIR/config/includes.chroot/etc/systemd/system/jamlinux-first-boot.service"
 ln -sf ../jamlinux-first-boot.service "$BUILD_DIR/config/includes.chroot/etc/systemd/system/multi-user.target.wants/jamlinux-first-boot.service"
 
 #external packages
 cp "$BASE_DIR/install_external_packages.sh" "$BUILD_DIR/config/hooks/normal/0510-external-packages.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0510-external-packages.hook.chroot"
+
+# installer target payload
+PAYLOAD_DIR="$BUILD_DIR/config/includes.binary/jamlinux-installer/rootfs"
+install_payload_file "$BASE_DIR/configure_installed_system.sh" "usr/local/bin/configure_installed_system.sh"
+install_payload_file "$BASE_DIR/first-boot.sh" "usr/local/bin/first-boot.sh"
+install_payload_file "$BASE_DIR/install_external_packages.sh" "usr/local/bin/install_external_packages.sh"
+install_payload_file "$BASE_DIR/install_theme.sh" "usr/local/bin/install_theme.sh"
+install_payload_file "$BASE_DIR/update_dconf.sh" "usr/local/bin/update_dconf.sh"
+install_payload_file "$BASE_DIR/systemd/jamlinux-first-boot.service" "etc/systemd/system/jamlinux-first-boot.service"
+install_payload_file "$BASE_DIR/sources/sources.list" "usr/local/src/jamlinux/sources.list"
+install_payload_file "$BASE_DIR/sources/vscode.list.chroot" "usr/local/src/jamlinux/repositories/vscode.list"
+install_payload_file "$BASE_DIR/sources/vscode.key.chroot" "usr/local/src/jamlinux/repositories/vscode.asc"
+install_payload_file "$BASE_DIR/sources/julians-package-repo.list.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.list"
+install_payload_file "$BASE_DIR/sources/julians-package-repo.key.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.asc"
+install_payload_file "$BASE_DIR/grub/grub_branding.cfg" "etc/default/grub.d/99-custom.cfg"
+install_payload_file "$BASE_DIR/grub/theme.txt" "usr/share/grub/themes/jamlinux/theme.txt"
+install_payload_file "$SPLASH_PNG" "usr/share/grub/themes/jamlinux/splash.png"
+install_payload_file "$BASE_DIR/plymouth/jamlinux/jamlinux.plymouth" "usr/share/plymouth/themes/jamlinux/jamlinux.plymouth"
+install_payload_file "$BASE_DIR/plymouth/jamlinux/jamlinux.script" "usr/share/plymouth/themes/jamlinux/jamlinux.script"
+install_payload_file "$BASE_DIR/branding/logo.png" "usr/share/plymouth/themes/jamlinux/logo.png"
+install_payload_file "$BASE_DIR/branding/logo.png" "usr/share/images/jamlinux/logo.png"
+install_payload_file "$BASE_DIR/backgrounds/login-bg.jpg" "usr/share/backgrounds/gdm/login-bg.jpg"
+install_payload_file "$BASE_DIR/dconf/profile/gdm" "etc/dconf/profile/gdm"
+install_payload_file "$BASE_DIR/gnome/gdm" "etc/dconf/db/gdm.d/00-login-screen"
+install_payload_file "$BASE_DIR/autostart/ulauncher.desktop" "etc/xdg/autostart/ulauncher.desktop"
+install_payload_file "$BASE_DIR/branding/jamlinux-login.oga" "usr/share/sounds/jamlinux/jamlinux-login.oga"
+install_payload_file "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "usr/share/gdm/greeter/autostart/jamlinux-startup-sound.desktop"
+install_payload_file "$BASE_DIR/systemd/jamlinux-startup-sound.conf" "etc/tmpfiles.d/jamlinux-startup-sound.conf"
+install_payload_file "$BASE_DIR/jamlinux-startup-sound.sh" "usr/local/bin/jamlinux-startup-sound"
+mkdir -p "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants"
+ln -sf ../jamlinux-first-boot.service "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants/jamlinux-first-boot.service"
 
 # cleanup
 cp "$BASE_DIR/cleanup_hook.sh" "$BUILD_DIR/config/hooks/normal/0900-cleanup.hook.chroot"

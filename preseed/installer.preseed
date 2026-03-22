@@ -3,3 +3,9 @@ d-i netcfg/enable boolean false
 
 # Install only from the live media, without attempting to reach a package mirror.
 d-i apt-setup/use_mirror boolean false
+
+# Copy JamLinux target configuration into the installed system and activate it.
+d-i preseed/late_command string \
+    cp -a /cdrom/jamlinux-installer/rootfs/. /target/; \
+    in-target chmod +x /usr/local/bin/configure_installed_system.sh /usr/local/bin/first-boot.sh /usr/local/bin/install_external_packages.sh /usr/local/bin/install_theme.sh /usr/local/bin/update_dconf.sh; \
+    in-target /usr/local/bin/configure_installed_system.sh

@@ -42,6 +42,20 @@ stage {
     font-family: "Inter", "Noto Sans", sans-serif;
     font-weight: 500;
 }
+
+#lockDialogGroup {
+    background: #08111d url("jamlinux-login-bg.jpg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+.login-dialog-logo-bin {
+    background-image: url("jamlinux-logo.png");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
 '
 
 append_shell_override() {
@@ -52,6 +66,24 @@ append_shell_override() {
 
     printf '\n%s\n' "$jamlinux_shell_override" >> "$css_file"
     echo "  Patched $css_file"
+}
+
+copy_greeter_assets() {
+    local theme_dir="$1"
+    local login_bg="/usr/share/backgrounds/gdm/login-bg.jpg"
+    local logo_png="/usr/share/images/jamlinux/logo.png"
+
+    [ -d "$theme_dir" ] || return 1
+
+    if [ -f "$login_bg" ]; then
+        install -m 0644 "$login_bg" "$theme_dir/jamlinux-login-bg.jpg"
+        echo "  Staged $theme_dir/jamlinux-login-bg.jpg"
+    fi
+
+    if [ -f "$logo_png" ]; then
+        install -m 0644 "$logo_png" "$theme_dir/jamlinux-logo.png"
+        echo "  Staged $theme_dir/jamlinux-logo.png"
+    fi
 }
 
 rebuild_shell_resource() {
@@ -90,6 +122,7 @@ if [ "$patched" -eq 0 ]; then
 fi
 
 if [ -d /usr/share/gnome-shell/theme ]; then
+    copy_greeter_assets /usr/share/gnome-shell/theme || true
     rebuild_shell_resource /usr/share/gnome-shell/theme
 else
     echo "  Warning: no GNOME Shell theme directory found for gresource rebuild."

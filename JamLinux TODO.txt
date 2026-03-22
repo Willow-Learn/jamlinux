@@ -1,0 +1,6 @@
+- disable network during install 
+- better grub theme after install - match live cd
+- custom login screen not working - still showing debian 13
+- plymouth splash screen blocking lvm crypt prompt + loading animation
+- vscode, awa-gtk3 missing
+- sources.list empty

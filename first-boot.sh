@@ -18,6 +18,17 @@ log() {
     echo "[jamlinux first boot] $*"
 }
 
+install_external_packages() {
+    if [ ! -x /usr/local/bin/install_external_packages.sh ]; then
+        log "External package installer is missing."
+        return 1
+    fi
+
+    JAMLINUX_EXTERNAL_STRICT=1 \
+    JAMLINUX_PERSIST_REPOS=1 \
+        /usr/local/bin/install_external_packages.sh
+}
+
 run_with_retries() {
     local description="$1"
     shift
@@ -104,6 +115,7 @@ main() {
 
     mkdir -p "$(dirname "$MARKER_FILE")"
 
+    install_external_packages
     install_bundled_flatpaks
 
     touch "$MARKER_FILE"
