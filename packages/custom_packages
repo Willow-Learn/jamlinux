@@ -393,3 +393,8 @@ virt-manager
 libvirt-daemon-system
 btrfs-assistant
 zsh
+
+# Voice
+speech-dispatcher
+speech-dispatcher-espeak-ng
+espeak-ng
