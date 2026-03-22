@@ -50,7 +50,7 @@ sudo lb config \
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},package-lists,bootloaders}
 mkdir -p config/archives
-mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes}
+mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes,grub/themes/jamlinux}
 mkdir -p config/includes.chroot/usr/share/images/jamlinux
 mkdir -p config/includes.chroot/usr/local/bin
 mkdir -p config/includes.chroot/usr/local/src/jamlinux
@@ -196,6 +196,21 @@ cat > "$BUILD_DIR/config/bootloaders/splash.svg" <<EOF
   <text x="238" y="208" fill="#f3f4f6" font-family="DejaVu Sans" font-size="18" font-weight="700">Built: @YEAR@-@MONTH@-@DAY@ @HOUR@:@MINUTE@:@SECOND@ @TIMEZONE@</text>
 </svg>
 EOF
+
+SPLASH_SVG="$BUILD_DIR/config/bootloaders/splash.svg"
+SPLASH_PNG="$BUILD_DIR/config/bootloaders/splash.png"
+
+if command -v magick >/dev/null 2>&1; then
+    magick "$SPLASH_SVG" PNG32:"$SPLASH_PNG"
+elif command -v rsvg-convert >/dev/null 2>&1; then
+    rsvg-convert -w 800 -h 600 "$SPLASH_SVG" -o "$SPLASH_PNG"
+elif command -v convert >/dev/null 2>&1; then
+    convert "$SPLASH_SVG" PNG32:"$SPLASH_PNG"
+else
+    echo "Missing image renderer (magick, rsvg-convert, or convert) needed to build the GRUB splash image" >&2
+    exit 1
+fi
+
 cat > "$BUILD_DIR/config/bootloaders/grub-pc/live-theme/theme.txt" <<'EOF'
 desktop-image: "../splash.png"
 title-color: "#ffffff"
@@ -246,6 +261,8 @@ terminal-font: "Unifont Regular 16"
     text = "@TIMEOUT_NOTIFICATION_LONG@"
 }
 EOF
+cp "$BASE_DIR/grub/theme.txt" "$BUILD_DIR/config/includes.chroot/usr/share/grub/themes/jamlinux/theme.txt"
+cp "$SPLASH_PNG" "$BUILD_DIR/config/includes.chroot/usr/share/grub/themes/jamlinux/splash.png"
 
 #grub
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/default/grub.d"
