@@ -1,20 +1,27 @@
 # JamLinux
-Debian Testing remix designed to look beautiful and work with the latest x64_86 hardware (in particular, ThinkPad T14s AMD).
+Polished daily-driver desktop based on Debian Testing. Designed to look beautiful, be practical and work with the latest x64_86 hardware (in particular, AMD based ThinkPad T14s).  
+   
+It aims to have strong out-the-box hardware support, all the applications you need, a full development stack, and b ready-to-go for gaming and multimedia.   
+   
+Opinionated Gnome 3 desktop environment.  
+   
+## Build ISO
+```
+sudo bash build_scripts/build.sh
+```
 
-## Build Scripts
-- build_scripts/copy-reference-system/run.sh - gathers local config of machine into reference/
-- build_scripts/build.sh - builds the ISO
+## Gather reference config from local machine
+```
+bash build_scripts/copy-reference-system/run.sh
+```
 
 ## Run in QEMU
-qemu-system-x86_64 -m 4096 -cdrom dist/jamlinux* -boot d
-
-## TODO:
-- code 
-- nautilus open in terminal
-- ulauncher
-- steam
-- python, ruby, rust, java, etc?
-- triple a?
-- tor?
-- vivaldi?
-- more firmware/drivers?
+qemu-system-x86_64 \
+  -enable-kvm \
+  -cpu host \
+  -smp 4 \
+  -m 8192 \
+  -cdrom jamlinux-*.iso \
+  -boot d \
+  -display gtk,gl=on \
+  -device virtio-vga

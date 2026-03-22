@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=JamLinux
+Description=JamLinux boot splash with pulsing logo and clean status text
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/jamlinux
+ScriptFile=/usr/share/plymouth/themes/jamlinux/jamlinux.script

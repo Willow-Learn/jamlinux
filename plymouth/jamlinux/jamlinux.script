@@ -1,0 +1,267 @@
+# JamLinux Plymouth theme
+
+Window.SetBackgroundTopColor(0.04, 0.08, 0.12);
+Window.SetBackgroundBottomColor(0.04, 0.08, 0.12);
+
+window.max_width = Window.GetX() * 2 + Window.GetWidth();
+window.max_height = Window.GetY() * 2 + Window.GetHeight();
+window.small_dimension = window.max_width;
+if (window.max_height < window.small_dimension)
+    window.small_dimension = window.max_height;
+
+logo.original = Image("logo.png");
+logo.target_height = window.small_dimension * 0.18;
+if (logo.target_height < 96)
+    logo.target_height = 96;
+if (logo.target_height > 220)
+    logo.target_height = 220;
+
+logo.scale = logo.target_height / logo.original.GetHeight();
+logo.image = logo.original.Scale(logo.original.GetWidth() * logo.scale,
+                                 logo.original.GetHeight() * logo.scale);
+logo.width = logo.image.GetWidth();
+logo.height = logo.image.GetHeight();
+logo.x = Window.GetX() + Window.GetWidth() / 2 - logo.width / 2;
+logo.y = Window.GetY() + Window.GetHeight() * 0.42 - logo.height / 2;
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetPosition(logo.x, logo.y, 1000);
+logo.opacity_angle = 0;
+
+text_colours.normal.red = 0.73;
+text_colours.normal.green = 0.84;
+text_colours.normal.blue = 0.94;
+
+text_colours.action.red = 1.0;
+text_colours.action.green = 0.67;
+text_colours.action.blue = 0.26;
+
+prompt_active = 0;
+status_line = "";
+message_line = "";
+message_is_action = 0;
+
+fun TextImage(text, colour) {
+    return Image.Text(text, colour.red, colour.green, colour.blue);
+}
+
+fun ComposeLabel(text, colour, y, z, existing_sprite) {
+    local.label;
+    if (!text || text == "")
+        return local.label;
+
+    local.label.image = TextImage(text, colour);
+    local.label.sprite = existing_sprite;
+    if (!local.label.sprite)
+        local.label.sprite = Sprite();
+
+    local.label.x = Window.GetX() + Window.GetWidth() / 2 - local.label.image.GetWidth() / 2;
+    local.label.y = y;
+    local.label.z = z;
+    local.label.sprite.SetImage(local.label.image);
+    local.label.sprite.SetPosition(local.label.x, local.label.y, local.label.z);
+    local.label.sprite.SetOpacity(1);
+    return local.label;
+}
+
+fun StringString(string, substring) {
+    start = 0;
+    while (String(string).CharAt(start)) {
+        walk = 0;
+        while (String(substring).CharAt(walk) == String(string).CharAt(start + walk)) {
+            walk++;
+            if (!String(substring).CharAt(walk))
+                return start;
+        }
+        start++;
+    }
+
+    return NULL;
+}
+
+fun StringLength(string) {
+    index = 0;
+    while (String(string).CharAt(index))
+        index++;
+    return index;
+}
+
+fun StringCopy(source, beginning, end) {
+    local.destination = "";
+    for (index = beginning; (((end == NULL) || (index <= end)) && (String(source).CharAt(index))); index++) {
+        local.destination += String(source).CharAt(index);
+    }
+
+    return local.destination;
+}
+
+fun ExtractColonField(source, field_index) {
+    local.start = 0;
+    local.current = 0;
+    local.index = 0;
+
+    while (1) {
+        local.character = String(source).CharAt(local.index);
+
+        if (!local.character) {
+            if (local.current == field_index)
+                return StringCopy(source, local.start, NULL);
+            return "";
+        }
+
+        if (local.character == ":") {
+            if (local.current == field_index)
+                return StringCopy(source, local.start, local.index - 1);
+
+            local.current++;
+            local.start = local.index + 1;
+        }
+
+        local.index++;
+    }
+}
+
+fun RepeatCharacter(character, count) {
+    local.output = "";
+    for (index = 0; index < count; index++)
+        local.output += character;
+    return local.output;
+}
+
+fun NormalMessageY() {
+    return logo.y + logo.height + 28;
+}
+
+fun PromptMessageY() {
+    return logo.y + logo.height + 18;
+}
+
+fun PromptBulletsY() {
+    return PromptMessageY() + 28;
+}
+
+fun ShowStatusLine(text) {
+    status_line = text;
+    if (prompt_active)
+        return;
+
+    if (!status_line || status_line == "") {
+        if (status_label.sprite)
+            status_label.sprite.SetOpacity(0);
+        return;
+    }
+
+    status_label = ComposeLabel(status_line, text_colours.normal, NormalMessageY(), 1001, status_label.sprite);
+}
+
+fun ShowMessageLine(text, is_action) {
+    message_line = text;
+    message_is_action = is_action;
+    if (prompt_active) {
+        if (message_label.sprite)
+            message_label.sprite.SetOpacity(0);
+        return;
+    }
+
+    if (!message_line || message_line == "") {
+        if (message_label.sprite)
+            message_label.sprite.SetOpacity(0);
+        return;
+    }
+
+    if (is_action)
+        message_label = ComposeLabel(message_line, text_colours.action, NormalMessageY() + 28, 1001, message_label.sprite);
+    else
+        message_label = ComposeLabel(message_line, text_colours.normal, NormalMessageY() + 28, 1001, message_label.sprite);
+}
+
+fun message_callback(message) {
+    local.is_action = 0;
+    if (!message || message == "") {
+        message_line = "";
+        message_is_action = 0;
+        if (message_label.sprite)
+            message_label.sprite.SetOpacity(0);
+        return;
+    }
+
+    local.prefix = "keys:";
+    local.keys = StringString(message, local.prefix);
+    if (local.keys != NULL) {
+        message = StringCopy(message, local.keys + StringLength(local.prefix), NULL);
+        local.is_action = 1;
+    }
+
+    local.fsck_cancel = "fsckd-cancel-msg:";
+    local.cancel_prefix = StringString(message, local.fsck_cancel);
+    if (local.cancel_prefix != NULL)
+        message = StringCopy(message, local.cancel_prefix + StringLength(local.fsck_cancel), NULL);
+
+    ShowMessageLine(message, local.is_action);
+}
+
+fun update_status_callback(status_text) {
+    if (!status_text || status_text == "") {
+        ShowStatusLine("");
+        return;
+    }
+
+    if (StringString(status_text, "fsckd:") == 0) {
+        local.percent = ExtractColonField(status_text, 2);
+        if (local.percent != "")
+            ShowStatusLine("Checking disks " + local.percent + "%");
+        else
+            ShowStatusLine("Checking disks");
+        return;
+    }
+
+    ShowStatusLine(status_text);
+}
+
+fun display_password_callback(prompt, bullets) {
+    prompt_active = 1;
+    if (status_label.sprite)
+        status_label.sprite.SetOpacity(0);
+    if (message_label.sprite)
+        message_label.sprite.SetOpacity(0);
+    prompt_label = ComposeLabel(prompt, text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
+    bullet_label = ComposeLabel(RepeatCharacter("*", bullets), text_colours.normal, PromptBulletsY(), 1002, bullet_label.sprite);
+}
+
+fun display_normal_callback() {
+    prompt_active = 0;
+    if (prompt_label.sprite)
+        prompt_label.sprite.SetOpacity(0);
+    if (bullet_label.sprite)
+        bullet_label.sprite.SetOpacity(0);
+    ShowStatusLine(status_line);
+    ShowMessageLine(message_line, message_is_action);
+}
+
+fun boot_progress_callback(progress, time) {
+    if (!prompt_active && status_line == "")
+        ShowStatusLine("Booting JamLinux");
+}
+
+fun refresh_callback() {
+    logo.opacity_angle += ((2 * 3.14) / 50) * 0.35;
+    local.min_opacity = 0.82;
+    local.opacity = (Math.Cos(logo.opacity_angle) + 1) / 2;
+    local.opacity *= 1 - local.min_opacity;
+    local.opacity += local.min_opacity;
+    logo.sprite.SetOpacity(local.opacity);
+    logo.sprite.SetPosition(logo.x, logo.y, 1000);
+}
+
+fun quit_callback() {
+    logo.sprite.SetOpacity(1);
+}
+
+ShowStatusLine("Booting JamLinux");
+
+Plymouth.SetMessageFunction(message_callback);
+Plymouth.SetUpdateStatusFunction(update_status_callback);
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+Plymouth.SetRefreshFunction(refresh_callback);
+Plymouth.SetQuitFunction(quit_callback);

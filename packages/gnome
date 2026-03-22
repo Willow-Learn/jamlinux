@@ -7,7 +7,9 @@ gdm3
 gnome-tweaks
 
 # GNOME apps
-gnome-terminal
+evolution
+gnome-software
+ptyxis
 gnome-text-editor
 gnome-calculator
 gnome-calendar
@@ -26,13 +28,18 @@ nautilus
 
 # Browser integration for extensions
 gnome-browser-connector
-chrome-gnome-shell
 
 # Extension management
 gnome-shell-extension-manager
+
+# Flatpak integration
+flatpak
+gnome-software-plugin-flatpak
 
 # System utilities
 gsettings-desktop-schemas
 dconf-cli
 dconf-editor
 glib-networking
+xdg-desktop-portal
+xdg-desktop-portal-gnome

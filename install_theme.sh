@@ -1,30 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Setting up JamLinux visual identity (Yaru + Custom Shell)..."
+echo "Setting up JamLinux visual identity (Yaru + JamLinux Shell)..."
 
-# === FONTS ===
-cd /tmp
-
-# Install Inter
-curl -L "https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip" -o inter.zip 2>/dev/null || true
-if [ -f inter.zip ]; then
-    mkdir -p /usr/share/fonts/inter
-    unzip -q inter.zip -d /usr/share/fonts/inter/
-fi
-
-# Install JetBrains Mono
-curl -L "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip" \
-    -o jbmono.zip 2>/dev/null || true
-if [ -f jbmono.zip ]; then
-    mkdir -p /usr/share/fonts/jetbrains-mono
-    unzip -q jbmono.zip -d /usr/share/fonts/jetbrains-mono/
-fi
-
-fc-cache -f -v
-
-# === YARU THEME (GTK + Icons + Cursor) ===
-apt-get install -y yaru-theme-gtk yaru-theme-icon yaru-theme-sound
+# Fonts and Yaru are provided by the image package lists.
 
 # === CUSTOM SHELL THEME: JamLinux-Shell ===
 mkdir -p /usr/share/themes/JamLinux-Shell/gnome-shell
@@ -67,6 +46,6 @@ stage {
 }
 CSS
 
-chmod -R 755 /usr/share/themes/JamLinux-Shell/
+chmod -R a+rX /usr/share/themes/JamLinux-Shell/
 
 echo "JamLinux theme setup complete."

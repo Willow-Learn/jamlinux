@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=JamLinux Startup Sound
+Comment=Play a startup sound when the GNOME session is ready
+Exec=/usr/local/bin/jamlinux-startup-sound
+OnlyShowIn=GNOME;
+NoDisplay=true
+X-GNOME-Autostart-Delay=8

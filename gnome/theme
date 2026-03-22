@@ -1,14 +1,16 @@
 [org/gnome/desktop/interface]
-gtk-theme='Adwaita-dark'
+gtk-theme='Yaru'
 icon-theme='Yaru'
 cursor-theme='Yaru'
 font-name='Inter 11'
-monospace-font-name='JetBrains Mono 10'
+document-font-name='Inter 12'
+monospace-font-name='JetBrains Mono 11'
 enable-animations=true
-color-scheme='prefer-dark'
+color-scheme='default'
 
 # Background
 [org/gnome/desktop/background]
+picture-options='zoom'
 picture-uri='file:///usr/share/backgrounds/jamlinux/default-bg.jpg'
 picture-uri-dark='file:///usr/share/backgrounds/jamlinux/default-bg-dark.jpg'
 primary-color='#1a1a1a'

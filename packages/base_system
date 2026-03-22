@@ -25,6 +25,9 @@ firmware-bnx2
 firmware-bnx2x
 firmware-brcm80211
 firmware-cavium
+firmware-mediatek
+firmware-intel-graphics
+firmware-intel-misc
 firmware-intel-sound
 firmware-iwlwifi
 firmware-libertas
@@ -35,5 +38,7 @@ firmware-qlogic
 firmware-samsung
 firmware-siano
 firmware-ti-connectivity
+bluez-firmware
+wireless-regdb
 amd64-microcode
 intel-microcode

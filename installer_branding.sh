@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Customizing Debian Installer..."
+echo "Setting up installer..."
 
 # Note: The installer slideshow is complex to customize
 # This sets basic branding strings
