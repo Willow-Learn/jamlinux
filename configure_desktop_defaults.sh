@@ -44,7 +44,7 @@ HandleLidSwitchDocked=suspend
 EOF
 
 packages_to_purge=()
-for package in firefox firefox-esr gnome-terminal gnome-terminal-data nautilus-extension-gnome-terminal; do
+for package in firefox firefox-esr gnome-shell-extension-user-theme gnome-terminal gnome-terminal-data nautilus-extension-gnome-terminal; do
     if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then
         packages_to_purge+=("$package")
     fi

@@ -10,6 +10,12 @@ Opinionated Gnome 3 desktop environment, optimised for British English.
 sudo bash build_scripts/build.sh
 ```
 
+## Resume Build
+```
+cd $BUILD_DIR
+sudo lb build
+```
+
 ## Gather reference config from local machine
 ```
 bash build_scripts/copy-reference-system/run.sh

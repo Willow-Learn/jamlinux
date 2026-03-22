@@ -4,7 +4,6 @@ cd $BASE_DIR
 gsettings get org.gnome.desktop.interface gtk-theme > active-gtk-theme.txt
 gsettings get org.gnome.desktop.interface icon-theme > active-icon-theme.txt
 gsettings get org.gnome.desktop.interface cursor-theme > active-cursor-theme.txt
-gsettings get org.gnome.shell.extensions.user-theme name > active-shell-theme.txt 2>/dev/null || echo "No shell theme"
 
 # Copy theme directories
 mkdir -p themes icons

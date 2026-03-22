@@ -145,8 +145,107 @@ mkdir -p "$BUILD_DIR/config/includes.chroot/usr/share/sounds/jamlinux"
 cp "$BASE_DIR/branding/jamlinux-login.oga" "$BUILD_DIR/config/includes.chroot/usr/share/sounds/jamlinux/jamlinux-login.oga"
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart"
 cp "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart/jamlinux-startup-sound.desktop"
+cp "$BASE_DIR/autostart/ulauncher.desktop" "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart/ulauncher.desktop"
 cp "$BASE_DIR/jamlinux-startup-sound.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
+
+# bootloader splash
+mkdir -p "$BUILD_DIR/config/bootloaders/grub-pc/live-theme"
+cat > "$BUILD_DIR/config/bootloaders/splash.svg" <<EOF
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   width="800"
+   height="600"
+   viewBox="0 0 800 600"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08111d" />
+      <stop offset="55%" stop-color="#10253f" />
+      <stop offset="100%" stop-color="#050b14" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.18" r="0.85">
+      <stop offset="0%" stop-color="#2bc0ff" stop-opacity="0.28" />
+      <stop offset="45%" stop-color="#2bc0ff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#2bc0ff" stop-opacity="0" />
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.55" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)" />
+  <rect width="800" height="600" fill="url(#glow)" />
+  <circle cx="675" cy="110" r="210" fill="#f59e0b" fill-opacity="0.08" />
+  <circle cx="80" cy="540" r="180" fill="#38bdf8" fill-opacity="0.08" />
+
+  <image
+     x="34"
+     y="82"
+     width="170"
+     height="170"
+     preserveAspectRatio="xMidYMid meet"
+     filter="url(#shadow)"
+     xlink:href="data:image/png;base64,$(base64 -w 0 "$BASE_DIR/branding/pp.png")" />
+
+    <text x="238" y="110" fill="#ffffff" font-family="DejaVu Sans" font-size="30" font-weight="700">JamLinux GNU/Linux @VERSION@ (@DISTRIBUTION@)</text>
+    <text x="238" y="148" fill="#ffffff" font-family="DejaVu Sans" font-size="30" font-weight="700">@ARCHITECTURE@</text>
+
+  <text x="238" y="208" fill="#f3f4f6" font-family="DejaVu Sans" font-size="18" font-weight="700">Built: @YEAR@-@MONTH@-@DAY@ @HOUR@:@MINUTE@:@SECOND@ @TIMEZONE@</text>
+</svg>
+EOF
+cat > "$BUILD_DIR/config/bootloaders/grub-pc/live-theme/theme.txt" <<'EOF'
+desktop-image: "../splash.png"
+title-color: "#ffffff"
+title-font: "Unifont Regular 16"
+title-text: ""
+message-font: "Unifont Regular 16"
+terminal-font: "Unifont Regular 16"
+
++ label {
+    top = 100%-50
+    left = 0
+    width = 100%
+    height = 20
+    text = "@KEYMAP_SHORT@"
+    align = "center"
+    color = "#ffffff"
+	font = "Unifont Regular 16"
+}
+
++ boot_menu {
+    left = 10%
+    width = 80%
+    top = 52%
+    height = 48%-80
+    item_color = "#a8a8a8"
+	item_font = "Unifont Regular 16"
+    selected_item_color= "#ffffff"
+	selected_item_font = "Unifont Regular 16"
+    item_height = 16
+    item_padding = 0
+    item_spacing = 4
+	icon_width = 0
+	icon_heigh = 0
+	item_icon_space = 0
+}
+
++ progress_bar {
+    id = "__timeout__"
+    left = 15%
+    top = 100%-80
+    height = 16
+    width = 70%
+    font = "Unifont Regular 16"
+    text_color = "#000000"
+    fg_color = "#ffffff"
+    bg_color = "#a8a8a8"
+    border_color = "#ffffff"
+    text = "@TIMEOUT_NOTIFICATION_LONG@"
+}
+EOF
 
 #grub
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/default/grub.d"
