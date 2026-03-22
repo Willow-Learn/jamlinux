@@ -48,7 +48,7 @@ sudo lb config \
     --debian-installer-distribution trixie
 
 # Create all necessary directories
-mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},package-lists,bootloaders}
+mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes,grub/themes/jamlinux}
 mkdir -p config/includes.chroot/usr/share/images/jamlinux
@@ -77,6 +77,9 @@ cp "$BASE_DIR/sources/julians-package-repo.key.chroot" "$BUILD_DIR/config/includ
 cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.chroot"
 cp "$BASE_DIR/packages/gnome" "$BUILD_DIR/config/package-lists/gnome.list.chroot"
 cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.list.chroot"
+
+#installer preseed
+cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
 
 #dconf
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/dconf/profile"
