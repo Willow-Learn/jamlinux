@@ -1,8 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=JamLinux Startup Sound
-Comment=Play a startup sound when the GNOME session is ready
+Name=JamLinux Greeter Startup Sound
+Comment=Play the branded startup sound when the login screen is ready
+TryExec=/usr/local/bin/jamlinux-startup-sound
 Exec=/usr/local/bin/jamlinux-startup-sound
-OnlyShowIn=GNOME;
+Terminal=false
 NoDisplay=true
 X-GNOME-Autostart-Delay=8

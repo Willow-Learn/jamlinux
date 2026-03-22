@@ -113,6 +113,8 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0503-nautilus-ptyxis.hook.chroot"
 #locale hook
 cp "$BASE_DIR/configure_locale.sh" "$BUILD_DIR/config/hooks/normal/0504-locale.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0504-locale.hook.chroot"
+cp "$BASE_DIR/enforce_locale.sh" "$BUILD_DIR/config/hooks/normal/1030-locale-final.hook.chroot"
+chmod +x "$BUILD_DIR/config/hooks/normal/1030-locale-final.hook.chroot"
 
 #flatpak apps hook
 cp "$BASE_DIR/install_flatpak_apps.sh" "$BUILD_DIR/config/hooks/normal/0505-flatpak-apps.hook.chroot"
@@ -144,8 +146,11 @@ cp "$BASE_DIR/plymouth/jamlinux/jamlinux.script" "$BUILD_DIR/config/includes.chr
 mkdir -p "$BUILD_DIR/config/includes.chroot/usr/share/sounds/jamlinux"
 cp "$BASE_DIR/branding/jamlinux-login.oga" "$BUILD_DIR/config/includes.chroot/usr/share/sounds/jamlinux/jamlinux-login.oga"
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart"
-cp "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart/jamlinux-startup-sound.desktop"
 cp "$BASE_DIR/autostart/ulauncher.desktop" "$BUILD_DIR/config/includes.chroot/etc/xdg/autostart/ulauncher.desktop"
+mkdir -p "$BUILD_DIR/config/includes.chroot/usr/share/gdm/greeter/autostart"
+cp "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "$BUILD_DIR/config/includes.chroot/usr/share/gdm/greeter/autostart/jamlinux-startup-sound.desktop"
+mkdir -p "$BUILD_DIR/config/includes.chroot/etc/tmpfiles.d"
+cp "$BASE_DIR/systemd/jamlinux-startup-sound.conf" "$BUILD_DIR/config/includes.chroot/etc/tmpfiles.d/jamlinux-startup-sound.conf"
 cp "$BASE_DIR/jamlinux-startup-sound.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
 

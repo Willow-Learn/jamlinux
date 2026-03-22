@@ -1,18 +1,11 @@
 #!/bin/bash
 set -e
 
-runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$UID}"
-stamp_file="$runtime_dir/jamlinux-startup-sound.played"
+stamp_dir="/run/jamlinux"
+stamp_file="$stamp_dir/startup-sound.played"
 
 if [ -e "$stamp_file" ]; then
     exit 0
-fi
-
-if command -v gsettings >/dev/null 2>&1; then
-    event_sounds="$(gsettings get org.gnome.desktop.sound event-sounds 2>/dev/null || true)"
-    if [ "$event_sounds" = "false" ]; then
-        exit 0
-    fi
 fi
 
 sound_file=""
@@ -27,7 +20,7 @@ do
     fi
 done
 
-if [ -z "$sound_file" ] || ! command -v pw-play >/dev/null 2>&1; then
+if [ ! -d "$stamp_dir" ] || [ -z "$sound_file" ] || ! command -v pw-play >/dev/null 2>&1; then
     exit 0
 fi
 

@@ -10,11 +10,11 @@ if (window.max_height < window.small_dimension)
     window.small_dimension = window.max_height;
 
 logo.original = Image("logo.png");
-logo.target_height = window.small_dimension * 0.18;
-if (logo.target_height < 96)
-    logo.target_height = 96;
-if (logo.target_height > 220)
-    logo.target_height = 220;
+logo.target_height = window.small_dimension * 0.24;
+if (logo.target_height < 128)
+    logo.target_height = 128;
+if (logo.target_height > 320)
+    logo.target_height = 320;
 
 logo.scale = logo.target_height / logo.original.GetHeight();
 logo.image = logo.original.Scale(logo.original.GetWidth() * logo.scale,
