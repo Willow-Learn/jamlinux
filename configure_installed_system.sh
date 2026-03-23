@@ -11,22 +11,35 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
-ensure_bookmark_line() {
+ensure_bookmark_lines() {
     local target_file="$1"
-    local bookmark_line="file:/// Computer"
+    local home_dir="$2"
     local tmp_file
+    local line
+    local computer_line="file:/// Computer"
+    local default_lines=(
+        "file://$home_dir/Documents Documents"
+        "file://$home_dir/Music Music"
+        "file://$home_dir/Pictures Pictures"
+        "file://$home_dir/Videos Videos"
+        "file://$home_dir/Downloads Downloads"
+    )
 
     mkdir -p "$(dirname "$target_file")"
 
-    if [ -f "$target_file" ] && grep -Fxq "$bookmark_line" "$target_file"; then
-        return
-    fi
-
     tmp_file="$(mktemp)"
-    printf '%s\n' "$bookmark_line" > "$tmp_file"
+    printf '%s\n' "$computer_line" > "$tmp_file"
+
+    for line in "${default_lines[@]}"; do
+        printf '%s\n' "$line" >> "$tmp_file"
+    done
 
     if [ -f "$target_file" ]; then
-        cat "$target_file" >> "$tmp_file"
+        while IFS= read -r line; do
+            [ -n "$line" ] || continue
+            grep -Fxq "$line" "$tmp_file" && continue
+            printf '%s\n' "$line" >> "$tmp_file"
+        done < "$target_file"
     fi
 
     mv "$tmp_file" "$target_file"
@@ -93,13 +106,11 @@ apply_chromium_defaults() {
 seed_files_bookmarks() {
     local home_dir bookmark_file
 
-    ensure_bookmark_line /etc/skel/.config/gtk-3.0/bookmarks
-
     for home_dir in /home/*; do
         [ -d "$home_dir" ] || continue
 
         bookmark_file="$home_dir/.config/gtk-3.0/bookmarks"
-        ensure_bookmark_line "$bookmark_file"
+        ensure_bookmark_lines "$bookmark_file" "$home_dir"
         chown "$(stat -c '%u:%g' "$home_dir")" "$bookmark_file" || warn "Failed to set ownership on $bookmark_file."
     done
 

@@ -16,10 +16,6 @@ EOF
 
 cp /etc/xdg/mimeapps.list /etc/skel/.config/mimeapps.list
 
-cat > /etc/skel/.config/gtk-3.0/bookmarks <<'EOF'
-file:/// Computer
-EOF
-
 if [ -x /usr/bin/chromium ]; then
     update-alternatives --set x-www-browser /usr/bin/chromium 2>/dev/null || true
     update-alternatives --set gnome-www-browser /usr/bin/chromium 2>/dev/null || true
