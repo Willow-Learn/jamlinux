@@ -111,10 +111,6 @@ cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installe
 chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/debian-installer.d/S40network"
 install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/netcfg/menu-item"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "sbin/netcfg"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "bin/netcfg"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "sbin/ethdetect"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "bin/ethdetect"
 
 # live session defaults
 cat > "$BUILD_DIR/config/includes.chroot/etc/live/config.conf.d/hostname.conf" <<'EOF'
