@@ -1,4 +1,3 @@
-# Remove installer network setup completely.
+# Keep the network configurator available, but remove the hardware
+# detection helper that triggers the problematic probe step.
 ethdetect
-netcfg
-netcfg-static

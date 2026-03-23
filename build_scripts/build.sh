@@ -14,16 +14,6 @@ install_payload_file() {
     cp "$source" "$destination"
 }
 
-install_installer_file() {
-    local source="$1"
-    local relative_path="$2"
-    local destination="$BUILD_DIR/config/includes.installer/$relative_path"
-
-    mkdir -p "$(dirname "$destination")"
-    cp "$source" "$destination"
-    chmod 0755 "$destination"
-}
-
 cleanup_live_build_mounts() {
     local build_root mount_point
     build_root="${BASE_DIR%/}/build"
@@ -71,7 +61,7 @@ sudo lb config \
     --debian-installer-distribution trixie
 
 # Create all necessary directories
-mkdir -p config/{hooks/normal,hooks/binary,debian-installer,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
+mkdir -p config/{hooks/normal,hooks/binary,debian-installer,preseed,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/includes.binary/jamlinux-installer/rootfs
 mkdir -p config/includes.chroot/etc/live/config.conf.d
@@ -106,13 +96,10 @@ cp "$BASE_DIR/packages/gnome" "$BUILD_DIR/config/package-lists/gnome.list.chroot
 cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.list.chroot"
 
 # Installer preseed
-cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/debian-installer/preseed.cfg"
 cp "$BASE_DIR/installer/udeb_exclude" "$BUILD_DIR/config/debian-installer/udeb_exclude"
-cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
+cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/preseed/jamlinux.cfg.installer"
 cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/debian-installer.d/S40network"
-install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/netcfg/menu-item"
 
 # live session defaults
 cat > "$BUILD_DIR/config/includes.chroot/etc/live/config.conf.d/hostname.conf" <<'EOF'
