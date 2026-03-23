@@ -113,7 +113,7 @@ hide-indicator=1
 ignored-order=@as []
 lilypad-order=['color_picker', 'emoji_copy', 'Another_Window_Session_Manager', 'simple_timer']
 reorder=true
-rightbox-order=['lilypad', 'simplebreakreminder', 'copyous', 'monitor', 'tiling_assistant', 'drive_menu']
+rightbox-order=['lilypad', 'simplebreakreminder', 'copyous', 'monitor', 'tiling_assistant']
 show-icons=false
 
 [org/gnome/shell/extensions/pip-on-top]
