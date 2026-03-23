@@ -47,6 +47,7 @@ cd $BUILD_DIR
 sudo lb config \
     --distribution trixie \
     --archive-areas "main contrib non-free non-free-firmware" \
+    --bootappend-install "netcfg/enable=false netcfg/disable_autoconfig=true apt-setup/use_mirror=false hw-detect/load_firmware=false" \
     --debian-installer live \
     --debian-installer-gui true \
     --win32-loader false \
@@ -93,6 +94,8 @@ cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.
 
 # Installer preseed
 cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
+cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
+chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 
 #dconf
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/dconf/profile"

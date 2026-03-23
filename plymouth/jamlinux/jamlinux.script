@@ -133,7 +133,7 @@ fun RepeatCharacter(character, count) {
 }
 
 fun LoadingDotsY() {
-    return logo.y + logo.height + 16;
+    return logo.y + logo.height + 10;
 }
 
 fun CreateLoadingDots() {
@@ -178,6 +178,15 @@ fun PromptMessageY() {
 
 fun PromptBulletsY() {
     return PromptMessageY() + 28;
+}
+
+fun SetPromptSpritesOpacity(opacity) {
+    if (prompt_label.sprite)
+        prompt_label.sprite.SetOpacity(opacity);
+    if (bullet_label.sprite)
+        bullet_label.sprite.SetOpacity(opacity);
+    if (prompt_status_label.sprite)
+        prompt_status_label.sprite.SetOpacity(opacity);
 }
 
 fun ShowPromptStatusLine(text, colour) {
@@ -289,14 +298,22 @@ fun display_password_callback(prompt, bullets) {
         ShowPromptStatusLine(prompt_status_line, text_colours.normal);
 }
 
+fun display_question_callback(prompt, entry_contents) {
+    prompt_active = 1;
+    SetLoadingDotsOpacity(0);
+    if (status_label.sprite)
+        status_label.sprite.SetOpacity(0);
+    if (message_label.sprite)
+        message_label.sprite.SetOpacity(0);
+    prompt_label = ComposeLabel(prompt, text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
+    bullet_label = ComposeLabel(entry_contents, text_colours.normal, PromptBulletsY(), 1002, bullet_label.sprite);
+    if (prompt_status_line != "")
+        ShowPromptStatusLine(prompt_status_line, text_colours.normal);
+}
+
 fun display_normal_callback() {
     prompt_active = 0;
-    if (prompt_label.sprite)
-        prompt_label.sprite.SetOpacity(0);
-    if (bullet_label.sprite)
-        bullet_label.sprite.SetOpacity(0);
-    if (prompt_status_label.sprite)
-        prompt_status_label.sprite.SetOpacity(0);
+    SetPromptSpritesOpacity(0);
     prompt_status_line = "";
     SetLoadingDotsOpacity(1);
     ShowStatusLine(status_line);
@@ -334,6 +351,7 @@ ShowStatusLine("Booting JamLinux");
 Plymouth.SetMessageFunction(message_callback);
 Plymouth.SetUpdateStatusFunction(update_status_callback);
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 Plymouth.SetBootProgressFunction(boot_progress_callback);
 Plymouth.SetRefreshFunction(refresh_callback);

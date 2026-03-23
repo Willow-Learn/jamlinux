@@ -1,8 +1,13 @@
 # Keep installs offline by skipping all installer networking.
 d-i netcfg/enable boolean false
+d-i netcfg/disable_autoconfig boolean true
+d-i hw-detect/load_firmware boolean false
 
 # Install only from the live media, without attempting to reach a package mirror.
 d-i apt-setup/use_mirror boolean false
+
+# Force the installer into offline mode before any network setup runs.
+d-i preseed/early_command string /bin/sh /jamlinux-disable-installer-network.sh
 
 # Copy JamLinux target configuration into the installed system and activate it.
 d-i preseed/late_command string \

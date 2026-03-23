@@ -44,10 +44,17 @@ stage {
 }
 
 #lockDialogGroup {
-    background: #08111d url("jamlinux-login-bg.jpg");
-    background-repeat: no-repeat;
+    background-color: #08111d;
+    background-image: url("jamlinux-login-bg.jpg");
+    background-repeat: no-repeat !important;
     background-position: center;
     background-size: cover;
+}
+
+.screen-shield-background,
+.login-dialog,
+.unlock-dialog {
+    background-color: transparent;
 }
 
 .login-dialog-logo-bin {
@@ -86,46 +93,81 @@ copy_greeter_assets() {
     fi
 }
 
+extract_shell_resource() {
+    local theme_dir="$1"
+    local system_resource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
+    local resource
+    local filename
+
+    [ -f "$system_resource" ] || return 1
+
+    while read -r resource; do
+        [ -n "$resource" ] || continue
+        filename="$(basename "$resource")"
+        gresource extract "$system_resource" "$resource" > "$theme_dir/$filename"
+    done <<EOF
+$(gresource list "$system_resource" | grep '^/org/gnome/shell/theme/')
+EOF
+}
+
+patch_shell_css() {
+    local theme_dir="$1"
+    local css_file
+    local patched=0
+
+    for css_file in \
+        "$theme_dir/gnome-shell-dark.css" \
+        "$theme_dir/gnome-shell-light.css" \
+        "$theme_dir/gnome-shell-high-contrast.css"
+    do
+        if append_shell_override "$css_file"; then
+            patched=1
+        fi
+    done
+
+    [ "$patched" -eq 1 ]
+}
+
 rebuild_shell_resource() {
     local theme_dir="$1"
-    local manifest
+    local manifest="$theme_dir/jamlinux-shell-theme.gresource.xml"
     local target_resource="$theme_dir/gnome-shell-theme.gresource"
     local system_resource="/usr/share/gnome-shell/gnome-shell-theme.gresource"
 
     [ -d "$theme_dir" ] || return 1
 
-    manifest="$(mktemp)"
     {
         printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
         printf '%s\n' '<gresources>'
         printf '%s\n' '  <gresource prefix="/org/gnome/shell/theme">'
-        find "$theme_dir" -maxdepth 1 -type f ! -name '*.gresource' -printf '    <file>%f</file>\n' | sort
+        find "$theme_dir" -maxdepth 1 -type f \
+            ! -name '*.gresource' \
+            ! -name '*.xml' \
+            -printf '    <file>%f</file>\n' | sort
         printf '%s\n' '  </gresource>'
         printf '%s\n' '</gresources>'
     } > "$manifest"
 
     glib-compile-resources --sourcedir="$theme_dir" --target="$target_resource" "$manifest"
     install -m 0644 "$target_resource" "$system_resource"
-    rm -f "$manifest"
 
     echo "  Rebuilt $target_resource"
     echo "  Updated $system_resource"
 }
 
-patched=0
-if append_shell_override /usr/share/gnome-shell/theme/gnome-shell.css; then
-    patched=1
-fi
+theme_workspace="$(mktemp -d)"
+cleanup() {
+    rm -rf "$theme_workspace"
+}
+trap cleanup EXIT
 
-if [ "$patched" -eq 0 ]; then
-    echo "  Warning: no GNOME Shell CSS target found for default theme patching."
-fi
+extract_shell_resource "$theme_workspace" || true
+copy_greeter_assets "$theme_workspace" || true
 
-if [ -d /usr/share/gnome-shell/theme ]; then
-    copy_greeter_assets /usr/share/gnome-shell/theme || true
-    rebuild_shell_resource /usr/share/gnome-shell/theme
+if patch_shell_css "$theme_workspace"; then
+    rebuild_shell_resource "$theme_workspace"
 else
-    echo "  Warning: no GNOME Shell theme directory found for gresource rebuild."
+    echo "  Warning: no GNOME Shell CSS target found for default theme patching."
 fi
 
 echo "JamLinux theme setup complete."
