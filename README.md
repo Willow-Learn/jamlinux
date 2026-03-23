@@ -31,3 +31,7 @@ qemu-system-x86_64 \
   -boot d \
   -display gtk,gl=on \
   -device virtio-vga
+
+# Road Map
+- gnome top bar on all screens
+- 
