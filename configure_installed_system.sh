@@ -11,6 +11,54 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
+install_repo_registration_copy() {
+    local name="$1"
+    local list_src="$2"
+    local key_src="$3"
+    local list_dest="$4"
+    local key_dest="$5"
+
+    if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
+        warn "Skipping $name repository registration: staged metadata is missing."
+        return
+    fi
+
+    mkdir -p "$(dirname "$list_dest")" "$(dirname "$key_dest")"
+    install -m 0644 "$key_src" "$key_dest"
+    install -m 0644 "$list_src" "$list_dest"
+    log "Registered the $name repository for future updates."
+}
+
+install_repo_registration_dearmored() {
+    local name="$1"
+    local list_src="$2"
+    local key_src="$3"
+    local list_dest="$4"
+    local key_dest="$5"
+
+    if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
+        warn "Skipping $name repository registration: staged metadata is missing."
+        return
+    fi
+
+    mkdir -p "$(dirname "$list_dest")" "$(dirname "$key_dest")"
+    install -m 0644 "$list_src" "$list_dest"
+
+    if [ -f "$key_dest" ]; then
+        log "Keeping existing $name repository keyring."
+        return
+    fi
+
+    if ! command -v gpg >/dev/null 2>&1; then
+        warn "gpg is unavailable; could not install the $name repository keyring."
+        return
+    fi
+
+    gpg --batch --yes --dearmor --output "$key_dest" "$key_src"
+    chmod 0644 "$key_dest"
+    log "Registered the $name repository for future updates."
+}
+
 ensure_bookmark_lines() {
     local target_file="$1"
     local home_dir="$2"
@@ -55,6 +103,22 @@ seed_primary_sources() {
 
     install -m 0644 "$source_file" /etc/apt/sources.list
     log "Installed Debian package sources."
+}
+
+seed_external_repositories() {
+    install_repo_registration_copy \
+        "VS Code" \
+        "/usr/local/src/jamlinux/repositories/vscode.list" \
+        "/usr/local/src/jamlinux/repositories/vscode.asc" \
+        "/etc/apt/sources.list.d/vscode.list" \
+        "/etc/apt/keyrings/vscode.asc"
+
+    install_repo_registration_dearmored \
+        "Julian's package repo" \
+        "/usr/local/src/jamlinux/repositories/julians-package-repo.list" \
+        "/usr/local/src/jamlinux/repositories/julians-package-repo.asc" \
+        "/etc/apt/sources.list.d/julians-package-repo.list" \
+        "/usr/share/keyrings/julians-package-repo.gpg"
 }
 
 enable_first_boot_service() {
@@ -155,6 +219,7 @@ apply_grub_theme() {
 
 main() {
     seed_primary_sources
+    seed_external_repositories
     enable_first_boot_service
     apply_chromium_defaults
     seed_files_bookmarks

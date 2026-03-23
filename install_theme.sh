@@ -58,18 +58,30 @@ stage {
 }
 
 .login-dialog-logo-bin {
-    background-image: url("jamlinux-logo.png");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
+    background-image: none;
+    min-height: 0;
+    max-height: 0;
+    height: 0;
+    margin-top: 2400px;
+    margin-bottom: -2400px;
+    opacity: 0;
 }
 '
 
 append_shell_override() {
     local css_file="$1"
+    local tmp_file
 
     [ -f "$css_file" ] || return 1
-    grep -q "JamLinux shell overrides" "$css_file" && return 0
+
+    if grep -q "JamLinux shell overrides" "$css_file"; then
+        tmp_file="$(mktemp)"
+        awk '
+            /\/\* JamLinux shell overrides \*\// { exit }
+            { print }
+        ' "$css_file" > "$tmp_file"
+        mv "$tmp_file" "$css_file"
+    fi
 
     printf '\n%s\n' "$jamlinux_shell_override" >> "$css_file"
     echo "  Patched $css_file"
@@ -77,13 +89,38 @@ append_shell_override() {
 
 copy_greeter_assets() {
     local theme_dir="$1"
+    local precomposed_bg="/usr/share/backgrounds/gdm/login-lock-bg.jpg"
     local login_bg="/usr/share/backgrounds/gdm/login-bg.jpg"
     local logo_png="/usr/share/images/jamlinux/logo.png"
+    local bg_height
+    local logo_height
+    local logo_resized_height
+    local logo_bottom_margin
+    local logo_top_offset
 
     [ -d "$theme_dir" ] || return 1
 
-    if [ -f "$login_bg" ]; then
-        install -m 0644 "$login_bg" "$theme_dir/jamlinux-login-bg.jpg"
+    if [ -f "$precomposed_bg" ]; then
+        install -m 0644 "$precomposed_bg" "$theme_dir/jamlinux-login-bg.jpg"
+        echo "  Staged $theme_dir/jamlinux-login-bg.jpg"
+    elif [ -f "$login_bg" ]; then
+        if command -v magick >/dev/null 2>&1 && [ -f "$logo_png" ]; then
+            bg_height="$(magick identify -format '%h' "$login_bg")"
+            logo_height="$(magick identify -format '%h' "$logo_png")"
+            logo_resized_height=$(( logo_height * 40 / 100 ))
+            logo_bottom_margin=$(( bg_height * 7 / 100 ))
+            logo_top_offset=$(( bg_height - logo_bottom_margin - logo_resized_height ))
+            [ "$logo_top_offset" -lt 0 ] && logo_top_offset=0
+
+            magick "$login_bg" \
+                \( "$logo_png" -resize 40% \) \
+                -gravity north \
+                -geometry +0+"$logo_top_offset" \
+                -composite \
+                "$theme_dir/jamlinux-login-bg.jpg"
+        else
+            install -m 0644 "$login_bg" "$theme_dir/jamlinux-login-bg.jpg"
+        fi
         echo "  Staged $theme_dir/jamlinux-login-bg.jpg"
     fi
 

@@ -7,8 +7,11 @@ repo_dir="/usr/local/src/jamlinux/repositories"
 ulauncher_deb_url="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 max_attempts="${JAMLINUX_EXTERNAL_RETRY_ATTEMPTS:-4}"
 initial_retry_delay="${JAMLINUX_EXTERNAL_RETRY_DELAY:-10}"
-persist_repos="${JAMLINUX_PERSIST_REPOS:-0}"
-strict_mode="${JAMLINUX_EXTERNAL_STRICT:-0}"
+# Default to keeping repo registrations in place because the installed system
+# should be able to update these packages without re-running the installer.
+persist_repos="${JAMLINUX_PERSIST_REPOS:-1}"
+# Build-time installs should fail loudly if these packages cannot be staged.
+strict_mode="${JAMLINUX_EXTERNAL_STRICT:-1}"
 
 log() {
     echo "[jamlinux external packages] $*"
@@ -107,6 +110,74 @@ preserve_or_cleanup_repo_registration() {
     cleanup_repo_registration "$list_dest" "$key_dest"
 }
 
+list_apt_source_files() {
+    if [ -f /etc/apt/sources.list ]; then
+        printf '%s\n' /etc/apt/sources.list
+    fi
+
+    find /etc/apt/sources.list.d -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) 2>/dev/null
+}
+
+find_repo_sources() {
+    local repo_url="$1"
+    local exclude_path="$2"
+    local source_file
+    local found=1
+
+    while IFS= read -r source_file; do
+        [ -n "$source_file" ] || continue
+        [ "$source_file" = "$exclude_path" ] && continue
+
+        if grep -Fqs "$repo_url" "$source_file"; then
+            printf '%s\n' "$source_file"
+            found=0
+        fi
+    done < <(list_apt_source_files)
+
+    return "$found"
+}
+
+prepare_repo_registration() {
+    local name="$1"
+    local repo_url="$2"
+    local list_src="$3"
+    local key_src="$4"
+    local list_dest="$5"
+    local key_dest="$6"
+    local key_mode="$7"
+    local existing_sources
+
+    if [ -n "$repo_url" ]; then
+        existing_sources="$(find_repo_sources "$repo_url" "$list_dest" || true)"
+    else
+        existing_sources=""
+    fi
+
+    if [ -n "$existing_sources" ]; then
+        cleanup_repo_registration "$list_dest" "$key_dest"
+        log "Using existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$list_dest")" "$(dirname "$key_dest")"
+
+    case "$key_mode" in
+        copy)
+            cp "$key_src" "$key_dest"
+            ;;
+        dearmor)
+            gpg --batch --yes --dearmor --output "$key_dest" "$key_src"
+            ;;
+        *)
+            log "Unknown key mode '$key_mode' for $name."
+            return 1
+            ;;
+    esac
+
+    cp "$list_src" "$list_dest"
+    chmod 0644 "$key_dest" "$list_dest"
+}
+
 install_repo_package_with_dearmored_key() {
     local name="$1"
     local package_name="$2"
@@ -114,16 +185,14 @@ install_repo_package_with_dearmored_key() {
     local key_src="$repo_dir/$4"
     local list_dest="/etc/apt/sources.list.d/$3"
     local key_dest="/usr/share/keyrings/$5"
+    local repo_url="${6:-}"
 
     if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
         log "Skipping $name: missing repository metadata."
         return 0
     fi
 
-    mkdir -p /usr/share/keyrings /etc/apt/sources.list.d
-    gpg --batch --yes --dearmor --output "$key_dest" "$key_src"
-    cp "$list_src" "$list_dest"
-    chmod 0644 "$key_dest" "$list_dest"
+    prepare_repo_registration "$name" "$repo_url" "$list_src" "$key_src" "$list_dest" "$key_dest" dearmor
 
     if package_installed "$package_name"; then
         if run_with_retries "$name APT metadata refresh" default_repo_update; then
@@ -157,16 +226,14 @@ install_repo_package() {
     local key_src="$repo_dir/$4"
     local list_dest="/etc/apt/sources.list.d/$3"
     local key_dest="/etc/apt/keyrings/$4"
+    local repo_url="${5:-}"
 
     if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
         log "Skipping $name: missing repository metadata."
         return 0
     fi
 
-    mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
-    cp "$key_src" "$key_dest"
-    cp "$list_src" "$list_dest"
-    chmod 0644 "$key_dest" "$list_dest"
+    prepare_repo_registration "$name" "$repo_url" "$list_src" "$key_src" "$list_dest" "$key_dest" copy
 
     if package_installed "$package_name"; then
         if run_with_retries "$name APT metadata refresh" default_repo_update; then
@@ -226,8 +293,8 @@ install_ulauncher_release() {
 
 failures=0
 
-install_repo_package "VS Code" "code" "vscode.list" "vscode.asc" || failures=1
-install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg" || failures=1
+install_repo_package "VS Code" "code" "vscode.list" "vscode.asc" "https://packages.microsoft.com/repos/code" || failures=1
+install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg" "https://julianfairfax.codeberg.page/package-repo/debs" || failures=1
 install_ulauncher_release || failures=1
 
 if [ "$failures" -ne 0 ]; then

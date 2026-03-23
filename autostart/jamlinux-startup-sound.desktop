@@ -6,4 +6,4 @@ TryExec=/usr/local/bin/jamlinux-startup-sound
 Exec=/usr/local/bin/jamlinux-startup-sound
 Terminal=false
 NoDisplay=true
-X-GNOME-Autostart-Delay=8
+X-GNOME-Autostart-Delay=5

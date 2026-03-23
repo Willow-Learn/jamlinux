@@ -36,10 +36,15 @@ text_colours.action.green = 0.67;
 text_colours.action.blue = 0.26;
 
 prompt_active = 0;
+status = "normal";
 status_line = "";
 message_line = "";
 message_is_action = 0;
 prompt_status_line = "";
+prompt_entry_template = "[                    ]";
+password_dot_filename = "password_dot.png";
+password_field_filename = "password_field.png";
+password_dialogue = NULL;
 dots[0].opacity = 0.35;
 dots[1].opacity = 0.6;
 dots[2].opacity = 1.0;
@@ -66,6 +71,11 @@ fun ComposeLabel(text, colour, y, z, existing_sprite) {
     local.label.sprite.SetPosition(local.label.x, local.label.y, local.label.z);
     local.label.sprite.SetOpacity(1);
     return local.label;
+}
+
+fun HideSprite(sprite) {
+    if (sprite)
+        sprite.SetOpacity(0);
 }
 
 fun StringString(string, substring) {
@@ -132,6 +142,19 @@ fun RepeatCharacter(character, count) {
     return local.output;
 }
 
+fun NormalizePrompt(prompt) {
+    if (!prompt || prompt == "")
+        return "Enter disk password";
+
+    if (StringString(prompt, "Please unlock disk ") == 0)
+        return "Enter disk password";
+
+    if (StringString(prompt, "Enter passphrase for ") == 0)
+        return "Enter disk password";
+
+    return prompt;
+}
+
 fun LoadingDotsY() {
     return logo.y + logo.height + 10;
 }
@@ -183,10 +206,82 @@ fun PromptBulletsY() {
 fun SetPromptSpritesOpacity(opacity) {
     if (prompt_label.sprite)
         prompt_label.sprite.SetOpacity(opacity);
+    if (prompt_box_label.sprite)
+        prompt_box_label.sprite.SetOpacity(opacity);
     if (bullet_label.sprite)
         bullet_label.sprite.SetOpacity(opacity);
     if (prompt_status_label.sprite)
         prompt_status_label.sprite.SetOpacity(opacity);
+    if (password_dialogue.entry.sprite)
+        password_dialogue.entry.sprite.SetOpacity(opacity);
+    if (password_dialogue.bullets) {
+        for (index = 0; password_dialogue.bullets[index]; index++)
+            password_dialogue.bullets[index].sprite.SetOpacity(opacity);
+    }
+}
+
+fun SetupPasswordDialog(prompt) {
+    local.dialog;
+
+    if (password_dialogue)
+        local.dialog = password_dialogue;
+
+    if (!local.dialog.bullet_image)
+        local.dialog.bullet_image = Image(password_dot_filename);
+    if (!local.dialog.entry.image)
+        local.dialog.entry.image = Image(password_field_filename);
+    if (!local.dialog.entry.sprite)
+        local.dialog.entry.sprite = Sprite();
+
+    local.dialog.entry.x = Window.GetX() + Window.GetWidth() / 2 - local.dialog.entry.image.GetWidth() / 2;
+    local.dialog.entry.y = PromptBulletsY() - 6;
+    local.dialog.entry.z = 1001;
+    local.dialog.entry.sprite.SetImage(local.dialog.entry.image);
+    local.dialog.entry.sprite.SetPosition(local.dialog.entry.x, local.dialog.entry.y, local.dialog.entry.z);
+    local.dialog.entry.sprite.SetOpacity(1);
+
+    password_dialogue = local.dialog;
+}
+
+fun ShowPasswordDialog(prompt, bullets) {
+    local.bullet_width;
+    local.bullet_y;
+    local.margin;
+    local.spaces;
+
+    SetupPasswordDialog(prompt);
+    status = "password";
+    prompt_label = ComposeLabel(NormalizePrompt(prompt), text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
+
+    local.bullet_width = password_dialogue.bullet_image.GetWidth();
+    local.bullet_y = password_dialogue.entry.y +
+                     password_dialogue.entry.image.GetHeight() / 2 -
+                     password_dialogue.bullet_image.GetHeight() / 2;
+    local.margin = local.bullet_width;
+    local.spaces = Math.Int((password_dialogue.entry.image.GetWidth() - (local.margin * 2)) /
+                            (local.bullet_width / 2));
+    bullets_area.width = local.margin + local.spaces * (local.bullet_width / 2);
+    bullets_area.x = Window.GetX() + Window.GetWidth() / 2 - bullets_area.width / 2;
+
+    if (bullets > local.spaces)
+        bullets = local.spaces;
+
+    for (index = 0; password_dialogue.bullets[index] || index < bullets; index++) {
+        if (!password_dialogue.bullets[index]) {
+            password_dialogue.bullets[index].sprite = Sprite();
+            password_dialogue.bullets[index].sprite.SetImage(password_dialogue.bullet_image);
+            password_dialogue.bullets[index].x = bullets_area.x + index * local.bullet_width / 2;
+            password_dialogue.bullets[index].y = local.bullet_y;
+            password_dialogue.bullets[index].z = password_dialogue.entry.z + 1;
+            password_dialogue.bullets[index].sprite.SetPosition(password_dialogue.bullets[index].x,
+                                                                password_dialogue.bullets[index].y,
+                                                                password_dialogue.bullets[index].z);
+        }
+
+        password_dialogue.bullets[index].sprite.SetOpacity(0);
+        if (index < bullets)
+            password_dialogue.bullets[index].sprite.SetOpacity(1);
+    }
 }
 
 fun ShowPromptStatusLine(text, colour) {
@@ -288,12 +383,11 @@ fun update_status_callback(status_text) {
 fun display_password_callback(prompt, bullets) {
     prompt_active = 1;
     SetLoadingDotsOpacity(0);
-    if (status_label.sprite)
-        status_label.sprite.SetOpacity(0);
-    if (message_label.sprite)
-        message_label.sprite.SetOpacity(0);
-    prompt_label = ComposeLabel(prompt, text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
-    bullet_label = ComposeLabel(RepeatCharacter("*", bullets), text_colours.normal, PromptBulletsY(), 1002, bullet_label.sprite);
+    HideSprite(status_label.sprite);
+    HideSprite(message_label.sprite);
+    HideSprite(prompt_box_label.sprite);
+    HideSprite(bullet_label.sprite);
+    ShowPasswordDialog(prompt, bullets);
     if (prompt_status_line != "")
         ShowPromptStatusLine(prompt_status_line, text_colours.normal);
 }
@@ -301,11 +395,10 @@ fun display_password_callback(prompt, bullets) {
 fun display_question_callback(prompt, entry_contents) {
     prompt_active = 1;
     SetLoadingDotsOpacity(0);
-    if (status_label.sprite)
-        status_label.sprite.SetOpacity(0);
-    if (message_label.sprite)
-        message_label.sprite.SetOpacity(0);
-    prompt_label = ComposeLabel(prompt, text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
+    HideSprite(status_label.sprite);
+    HideSprite(message_label.sprite);
+    prompt_label = ComposeLabel(NormalizePrompt(prompt), text_colours.action, PromptMessageY(), 1002, prompt_label.sprite);
+    prompt_box_label = ComposeLabel(prompt_entry_template, text_colours.normal, PromptBulletsY(), 1001, prompt_box_label.sprite);
     bullet_label = ComposeLabel(entry_contents, text_colours.normal, PromptBulletsY(), 1002, bullet_label.sprite);
     if (prompt_status_line != "")
         ShowPromptStatusLine(prompt_status_line, text_colours.normal);

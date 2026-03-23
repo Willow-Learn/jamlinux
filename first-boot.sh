@@ -18,17 +18,6 @@ log() {
     echo "[jamlinux first boot] $*"
 }
 
-install_external_packages() {
-    if [ ! -x /usr/local/bin/install_external_packages.sh ]; then
-        log "External package installer is missing."
-        return 1
-    fi
-
-    JAMLINUX_EXTERNAL_STRICT=1 \
-    JAMLINUX_PERSIST_REPOS=1 \
-        /usr/local/bin/install_external_packages.sh
-}
-
 run_with_retries() {
     local description="$1"
     shift
@@ -115,8 +104,13 @@ main() {
 
     mkdir -p "$(dirname "$MARKER_FILE")"
 
-    install_external_packages
-    install_bundled_flatpaks
+    if install_bundled_flatpaks; then
+        log "Bundled Flatpak installation is complete."
+    else
+        log "Bundled Flatpak installation is still incomplete."
+        log "First-boot tasks are incomplete and will retry on the next boot."
+        exit 1
+    fi
 
     touch "$MARKER_FILE"
     log "First-boot tasks completed."
