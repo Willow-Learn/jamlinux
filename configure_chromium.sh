@@ -7,10 +7,44 @@ install -d -m 755 /etc/chromium/policies/managed
 
 cat > /etc/chromium/policies/managed/10-jamlinux.json <<'EOF'
 {
-  "ExtensionInstallForcelist": [
-    "ddkjiahejlhfcafbddmgiahcphecmpfh;https://clients2.google.com/service/update2/crx",
-    "bkdgflcldnnnapblkhphbgpggdiikppg;https://clients2.google.com/service/update2/crx"
-  ],
+  "ExtensionSettings": {
+    "*": {
+      "toolbar_pin": "force_unpinned"
+    },
+    "ddkjiahejlhfcafbddmgiahcphecmpfh": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "pkehgijcmpdhfbdbbnkijodmdjhbjlgp": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "ldpochfccmkkmhdbclfhpagapcfdljkj": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "kceglpglilklghkgofolieongaolnaob": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "noogafoofpebimajpfpamcfhoaifemoa": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "mnjggcdmjocbbbhaepdhchncahnbgone": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    },
+    "edacconmaakjimmfgnblocblbcdcpbko": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx",
+      "toolbar_pin": "force_pinned"
+    },
+    "gppongmhjkpfnbhagpmjfkannfbllamg": {
+      "installation_mode": "force_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
+    }
+  },
   "RestoreOnStartup": 1,
   "HomepageIsNewTabPage": true,
   "ShowHomeButton": true
@@ -20,9 +54,34 @@ EOF
 chmod 644 /etc/chromium/policies/managed/10-jamlinux.json
 
 if [ -f /etc/chromium/master_preferences ]; then
-    sed -i 's/"import_bookmarks"[[:space:]]*:[[:space:]]*false/"import_bookmarks": true/' /etc/chromium/master_preferences
-    sed -i 's|"homepage"[[:space:]]*:[[:space:]]*"[^"]*"|"homepage": "chrome://newtab/"|' /etc/chromium/master_preferences
-    sed -i 's/"homepage_is_newtabpage"[[:space:]]*:[[:space:]]*false/"homepage_is_newtabpage": true/' /etc/chromium/master_preferences
+    python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("/etc/chromium/master_preferences")
+data = json.loads(path.read_text())
+
+distribution = data.setdefault("distribution", {})
+distribution["import_bookmarks"] = True
+
+browser = data.setdefault("browser", {})
+browser["show_home_button"] = True
+
+toolbar = data.setdefault("toolbar", {})
+pinned_actions = toolbar.get("pinned_actions")
+if not isinstance(pinned_actions, list):
+    pinned_actions = []
+
+reading_mode_action = "kActionSidePanelShowReadAnything"
+if reading_mode_action not in pinned_actions:
+    pinned_actions.append(reading_mode_action)
+toolbar["pinned_actions"] = pinned_actions
+
+data["homepage"] = "chrome://newtab/"
+data["homepage_is_newtabpage"] = True
+
+path.write_text(json.dumps(data, indent=2) + "\n")
+PY
 fi
 
 install -d -m 755 /usr/share/chromium

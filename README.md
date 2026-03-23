@@ -37,9 +37,9 @@ qemu-system-x86_64 \
 - better wallpapers / slideshow?
 - grub branding
 - ulauncher extensions
-- chrome extensions ?
-- different browser?
-- different shell?
-- 
+- different browser instead of chrome?
+- different shell instead of bash?
+- customer kernel version (+ kenernel manager)
+- sid instead of trixie?
 
 

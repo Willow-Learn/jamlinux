@@ -21,7 +21,7 @@ cat > /usr/share/live-installer/README << 'EOF'
 JamLinux Installer
 ==================
 
-Welcome to JamLinux, a customized Debian Testing (Forky) distribution.
+Welcome to JamLinux, a customized Debian Testing (Trixie) distribution.
 
 This installer is based on Debian's live-installer with custom theming
 and pre-installed packages.
