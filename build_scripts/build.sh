@@ -71,7 +71,7 @@ sudo lb config \
     --debian-installer-distribution trixie
 
 # Create all necessary directories
-mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
+mkdir -p config/{hooks/normal,hooks/binary,debian-installer,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/includes.binary/jamlinux-installer/rootfs
 mkdir -p config/includes.chroot/etc/live/config.conf.d
@@ -106,6 +106,8 @@ cp "$BASE_DIR/packages/gnome" "$BUILD_DIR/config/package-lists/gnome.list.chroot
 cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.list.chroot"
 
 # Installer preseed
+cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/debian-installer/preseed.cfg"
+cp "$BASE_DIR/installer/udeb_exclude" "$BUILD_DIR/config/debian-installer/udeb_exclude"
 cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
 cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"

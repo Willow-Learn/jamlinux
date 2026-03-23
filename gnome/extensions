@@ -1,7 +1,8 @@
 # extension settings
 
 [org/gnome/shell/extensions/another-window-session-manager]
-windows-mapping='[["Unknown",{"W33 ([untitled])":{"windowTitle":null,"xid":"W33 ([untitled])","windowStableSequence":34}}],["/usr/share/applications/org.gnome.Shell.Extensions.desktop",{"W3 ([untitled])":{"windowTitle":null,"xid":"W3 ([untitled])","windowStableSequence":4}}],["/usr/share/applications/chromium.desktop",{"W36 ([untitled])":{"windowTitle":null,"xid":"W36 ([untitled])","windowStableSequence":37}}]]'
+enable-restore-previous-session=true
+windows-mapping='[["Unknown",{"W2 ([untitled])":{"windowTitle":null,"xid":"W2 ([untitled])","windowStableSequence":3}}],["/usr/share/applications/code.desktop",{"W3 ([untitled])":{"windowTitle":null,"xid":"W3 ([untitled])","windowStableSequence":4}}]]'
 
 [org/gnome/shell/extensions/astra-monitor]
 compact-mode=true
