@@ -14,6 +14,16 @@ install_payload_file() {
     cp "$source" "$destination"
 }
 
+install_installer_file() {
+    local source="$1"
+    local relative_path="$2"
+    local destination="$BUILD_DIR/config/includes.installer/$relative_path"
+
+    mkdir -p "$(dirname "$destination")"
+    cp "$source" "$destination"
+    chmod 0755 "$destination"
+}
+
 cleanup_live_build_mounts() {
     local build_root mount_point
     build_root="${BASE_DIR%/}/build"
@@ -47,10 +57,12 @@ cd $BUILD_DIR
 sudo lb config \
     --distribution trixie \
     --archive-areas "main contrib non-free non-free-firmware" \
-    --bootappend-install "netcfg/enable=false netcfg/disable_autoconfig=true apt-setup/use_mirror=false hw-detect/load_firmware=false" \
+    --bootappend-install "netcfg/enable=false netcfg/choose_interface=none netcfg/disable_autoconfig=true apt-setup/use_mirror=false hw-detect/load_firmware=false" \
     --debian-installer live \
     --debian-installer-gui true \
+    --debian-installer-preseedfile /preseed.cfg \
     --win32-loader false \
+    --firmware-binary false \
     --iso-volume "JAMLINUX" \
     --iso-application "JamLinux" \
     --iso-publisher "Jamie Munro" \
@@ -97,6 +109,12 @@ cp "$BASE_DIR/packages/custom_packages" "$BUILD_DIR/config/package-lists/custom.
 cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/preseed.cfg"
 cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/debian-installer.d/S40network"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "lib/netcfg/menu-item"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "sbin/netcfg"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "bin/netcfg"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "sbin/ethdetect"
+install_installer_file "$BASE_DIR/installer/skip-network-installer-step.sh" "bin/ethdetect"
 
 # live session defaults
 cat > "$BUILD_DIR/config/includes.chroot/etc/live/config.conf.d/hostname.conf" <<'EOF'

@@ -1,5 +1,6 @@
 # Keep installs offline by skipping all installer networking.
 d-i netcfg/enable boolean false
+d-i netcfg/choose_interface select none
 d-i netcfg/disable_autoconfig boolean true
 d-i hw-detect/load_firmware boolean false
 

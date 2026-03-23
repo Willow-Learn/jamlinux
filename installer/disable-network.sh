@@ -11,6 +11,7 @@ seed_debconf() {
     if command -v debconf-set >/dev/null 2>&1; then
         printf '%s\n' \
             'netcfg netcfg/enable boolean false' \
+            'netcfg netcfg/choose_interface select none' \
             'netcfg netcfg/disable_autoconfig boolean true' \
             'apt-setup apt-setup/use_mirror boolean false' \
             'hw-detect hw-detect/load_firmware boolean false' |
