@@ -35,3 +35,11 @@ qemu-system-x86_64 \
 # Road Map
 - gnome top bar on all screens
 - better wallpapers / slideshow?
+- grub branding
+- ulauncher extensions
+- chrome extensions ?
+- different browser?
+- different shell?
+- 
+
+
