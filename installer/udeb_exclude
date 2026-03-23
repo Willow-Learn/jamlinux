@@ -1,0 +1,4 @@
+# Remove installer network setup completely.
+ethdetect
+netcfg
+netcfg-static
