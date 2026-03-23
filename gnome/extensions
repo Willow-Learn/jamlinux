@@ -107,12 +107,12 @@ brightness=0.59999999999999998
 sigma=30
 
 [org/gnome/shell/extensions/lilypad]
-auto-collapse=true
+auto-collapse=false
 auto-collapse-millisecond=2500
 hide-indicator=1
 ignored-order=@as []
-lilypad-order=['color_picker', 'emoji_copy', 'Another_Window_Session_Manager']
-reorder=false
+lilypad-order=['color_picker', 'emoji_copy', 'Another_Window_Session_Manager', 'simple_timer']
+reorder=true
 rightbox-order=['lilypad', 'simplebreakreminder', 'copyous', 'monitor', 'tiling_assistant', 'drive_menu']
 show-icons=false
 
