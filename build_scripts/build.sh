@@ -62,6 +62,7 @@ sudo lb config \
 mkdir -p config/{hooks/normal,hooks/binary,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/includes.binary/jamlinux-installer/rootfs
+mkdir -p config/includes.chroot/etc/live/config.conf.d
 mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes,grub/themes/jamlinux}
 mkdir -p config/includes.chroot/usr/share/images/jamlinux
 mkdir -p config/includes.chroot/usr/local/bin
@@ -97,6 +98,11 @@ cp "$BASE_DIR/preseed/installer.preseed" "$BUILD_DIR/config/includes.installer/p
 cp "$BASE_DIR/installer/disable-network.sh" "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 chmod +x "$BUILD_DIR/config/includes.installer/jamlinux-disable-installer-network.sh"
 
+# live session defaults
+cat > "$BUILD_DIR/config/includes.chroot/etc/live/config.conf.d/hostname.conf" <<'EOF'
+LIVE_HOSTNAME="jamlinux"
+EOF
+
 #dconf
 mkdir -p "$BUILD_DIR/config/includes.chroot/etc/dconf/profile"
 cp "$BASE_DIR/dconf/profile/user" "$BUILD_DIR/config/includes.chroot/etc/dconf/profile/user"
@@ -127,6 +133,10 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
 #desktop defaults hook
 cp "$BASE_DIR/configure_desktop_defaults.sh" "$BUILD_DIR/config/hooks/normal/0502-defaults.hook.chroot"
 chmod +x config/hooks/normal/0502-defaults.hook.chroot
+
+#chromium defaults and policy hook
+cp "$BASE_DIR/configure_chromium.sh" "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
+chmod +x "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 
 #nautilus ptyxis extension hook
 cp "$BASE_DIR/nautilus-ptyxis.c" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/nautilus-ptyxis.c"
@@ -180,6 +190,8 @@ cp "$BASE_DIR/jamlinux-startup-sound.sh" "$BUILD_DIR/config/includes.chroot/usr/
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/jamlinux-startup-sound"
 cp "$BASE_DIR/configure_installed_system.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_installed_system.sh"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_installed_system.sh"
+cp "$BASE_DIR/configure_chromium.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_chromium.sh"
+chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/configure_chromium.sh"
 cp "$BASE_DIR/install_external_packages.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_external_packages.sh"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/install_external_packages.sh"
 
@@ -321,6 +333,7 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0510-external-packages.hook.chroot"
 # installer target payload
 PAYLOAD_DIR="$BUILD_DIR/config/includes.binary/jamlinux-installer/rootfs"
 install_payload_file "$BASE_DIR/configure_installed_system.sh" "usr/local/bin/configure_installed_system.sh"
+install_payload_file "$BASE_DIR/configure_chromium.sh" "usr/local/bin/configure_chromium.sh"
 install_payload_file "$BASE_DIR/first-boot.sh" "usr/local/bin/first-boot.sh"
 install_payload_file "$BASE_DIR/install_external_packages.sh" "usr/local/bin/install_external_packages.sh"
 install_payload_file "$BASE_DIR/install_theme.sh" "usr/local/bin/install_theme.sh"
@@ -347,6 +360,7 @@ install_payload_file "$BASE_DIR/autostart/jamlinux-startup-sound.desktop" "usr/s
 install_payload_file "$BASE_DIR/systemd/jamlinux-startup-sound.conf" "etc/tmpfiles.d/jamlinux-startup-sound.conf"
 install_payload_file "$BASE_DIR/jamlinux-startup-sound.sh" "usr/local/bin/jamlinux-startup-sound"
 chmod +x "$PAYLOAD_DIR/usr/local/bin/jamlinux-startup-sound"
+chmod +x "$PAYLOAD_DIR/usr/local/bin/configure_chromium.sh"
 mkdir -p "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants"
 ln -sf ../jamlinux-first-boot.service "$PAYLOAD_DIR/etc/systemd/system/multi-user.target.wants/jamlinux-first-boot.service"
 

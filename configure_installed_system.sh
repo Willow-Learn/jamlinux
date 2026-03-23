@@ -81,6 +81,15 @@ apply_shell_theme() {
     /usr/local/bin/install_theme.sh || warn "Theme activation failed."
 }
 
+apply_chromium_defaults() {
+    if [ ! -x /usr/local/bin/configure_chromium.sh ]; then
+        warn "Chromium configuration script is missing."
+        return
+    fi
+
+    /usr/local/bin/configure_chromium.sh || warn "Chromium configuration failed."
+}
+
 seed_files_bookmarks() {
     local home_dir bookmark_file
 
@@ -136,6 +145,7 @@ apply_grub_theme() {
 main() {
     seed_primary_sources
     enable_first_boot_service
+    apply_chromium_defaults
     seed_files_bookmarks
     apply_dconf_databases
     apply_shell_theme
