@@ -400,6 +400,6 @@ sudo lb build
 
 #launch
 mkdir -p $BASE_DIR/dist
-cp *.iso $BASE_DIR/dist/jamlinux-$(date +%Y%m%d).iso
+cp *.iso $BASE_DIR/dist/jamlinux-v1.0-$(date +%Y%m%d).iso
 
 sync
