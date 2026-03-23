@@ -3,7 +3,7 @@ set -e
 
 echo "Configuring JamLinux desktop defaults..."
 
-mkdir -p /etc/xdg /etc/skel/.config
+mkdir -p /etc/xdg /etc/skel/.config /etc/skel/.config/gtk-3.0
 
 cat > /etc/xdg/mimeapps.list <<'EOF'
 [Default Applications]
@@ -15,6 +15,10 @@ x-scheme-handler/https=chromium.desktop
 EOF
 
 cp /etc/xdg/mimeapps.list /etc/skel/.config/mimeapps.list
+
+cat > /etc/skel/.config/gtk-3.0/bookmarks <<'EOF'
+file:/// Computer
+EOF
 
 if [ -x /usr/bin/chromium ]; then
     update-alternatives --set x-www-browser /usr/bin/chromium 2>/dev/null || true

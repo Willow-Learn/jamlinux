@@ -258,6 +258,10 @@ gnome-software
 gnome-software-plugin-flatpak
 gnome-sound-recorder
 gnome-tweaks
+gir1.2-gda-5.0 
+gir1.2-gsound-1.0
+iotop
+gir1.2-gtop-2.0
 gvfs-backends
 fwupd
 gnome-user-share

@@ -1,6 +1,6 @@
 #! /bin/bash
-export BASE_DIR="/home/jbm/JamLinux/reference/$(date +%Y%m%d)"
-SCRIPTS_DIR="/home/jbm/JamLinux/build_scripts/copy-reference-system"
+export BASE_DIR="/home/jbm/jamlinux/reference/$(date +%Y%m%d)"
+SCRIPTS_DIR="/home/jbm/jamlinux/build_scripts/copy-reference-system"
 
 mkdir -p "$BASE_DIR"
 

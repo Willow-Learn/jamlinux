@@ -11,6 +11,27 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
+ensure_bookmark_line() {
+    local target_file="$1"
+    local bookmark_line="file:/// Computer"
+    local tmp_file
+
+    mkdir -p "$(dirname "$target_file")"
+
+    if [ -f "$target_file" ] && grep -Fxq "$bookmark_line" "$target_file"; then
+        return
+    fi
+
+    tmp_file="$(mktemp)"
+    printf '%s\n' "$bookmark_line" > "$tmp_file"
+
+    if [ -f "$target_file" ]; then
+        cat "$target_file" >> "$tmp_file"
+    fi
+
+    mv "$tmp_file" "$target_file"
+}
+
 seed_primary_sources() {
     local source_file="/usr/local/src/jamlinux/sources.list"
 
@@ -60,6 +81,22 @@ apply_shell_theme() {
     /usr/local/bin/install_theme.sh || warn "Theme activation failed."
 }
 
+seed_files_bookmarks() {
+    local home_dir bookmark_file
+
+    ensure_bookmark_line /etc/skel/.config/gtk-3.0/bookmarks
+
+    for home_dir in /home/*; do
+        [ -d "$home_dir" ] || continue
+
+        bookmark_file="$home_dir/.config/gtk-3.0/bookmarks"
+        ensure_bookmark_line "$bookmark_file"
+        chown "$(stat -c '%u:%g' "$home_dir")" "$bookmark_file" || warn "Failed to set ownership on $bookmark_file."
+    done
+
+    log "Seeded Files sidebar bookmarks."
+}
+
 apply_plymouth_theme() {
     if [ ! -f /usr/share/plymouth/themes/jamlinux/jamlinux.plymouth ]; then
         warn "JamLinux Plymouth theme files are missing."
@@ -99,6 +136,7 @@ apply_grub_theme() {
 main() {
     seed_primary_sources
     enable_first_boot_service
+    seed_files_bookmarks
     apply_dconf_databases
     apply_shell_theme
     apply_plymouth_theme
