@@ -257,6 +257,7 @@ gnome-software-plugin-fwupd
 gnome-software
 gnome-software-plugin-flatpak
 gnome-sound-recorder
+gnome-keyring
 gnome-tweaks
 gpg
 gir1.2-gda-5.0 
@@ -264,6 +265,7 @@ gir1.2-gsound-1.0
 iotop
 gir1.2-gtop-2.0
 gvfs-backends
+libpam-gnome-keyring
 fwupd
 gnome-user-share
 keepassxc-full

@@ -84,7 +84,7 @@ fi
 
 # Stage third-party repository metadata for a post-package install hook.
 cp "$BASE_DIR/sources/vscode.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.list"
-cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.asc"
+cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/microsoft.asc"
 cp "$BASE_DIR/sources/julians-package-repo.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.list"
 cp "$BASE_DIR/sources/julians-package-repo.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.asc"
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/etc/apt/sources.list"
@@ -353,7 +353,7 @@ install_payload_file "$BASE_DIR/update_dconf.sh" "usr/local/bin/update_dconf.sh"
 install_payload_file "$BASE_DIR/systemd/jamlinux-first-boot.service" "etc/systemd/system/jamlinux-first-boot.service"
 install_payload_file "$BASE_DIR/sources/sources.list" "usr/local/src/jamlinux/sources.list"
 install_payload_file "$BASE_DIR/sources/vscode.list.chroot" "usr/local/src/jamlinux/repositories/vscode.list"
-install_payload_file "$BASE_DIR/sources/vscode.key.chroot" "usr/local/src/jamlinux/repositories/vscode.asc"
+install_payload_file "$BASE_DIR/sources/vscode.key.chroot" "usr/local/src/jamlinux/repositories/microsoft.asc"
 install_payload_file "$BASE_DIR/sources/julians-package-repo.list.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.list"
 install_payload_file "$BASE_DIR/sources/julians-package-repo.key.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.asc"
 install_payload_file "$BASE_DIR/grub/grub_branding.cfg" "etc/default/grub.d/99-custom.cfg"

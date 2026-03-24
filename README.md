@@ -45,5 +45,3 @@ qemu-system-x86_64 \
   - detect apt get updates and alert users (probably easy)
   - update to latest "JamLinux" version (harder)
 - remove "via AWSM" from reboot/power menu
-
-

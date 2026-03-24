@@ -154,7 +154,7 @@ prepare_repo_registration() {
     fi
 
     if [ -n "$existing_sources" ]; then
-        cleanup_repo_registration "$list_dest" "$key_dest"
+        rm -f "$list_dest"
         log "Using existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
         return 0
     fi
@@ -293,7 +293,7 @@ install_ulauncher_release() {
 
 failures=0
 
-install_repo_package "VS Code" "code" "vscode.list" "vscode.asc" "https://packages.microsoft.com/repos/code" || failures=1
+install_repo_package_with_dearmored_key "VS Code" "code" "vscode.list" "microsoft.asc" "microsoft.gpg" "https://packages.microsoft.com/repos/code" || failures=1
 install_repo_package_with_dearmored_key "Julian's package repo" "adw-gtk3" "julians-package-repo.list" "julians-package-repo.asc" "julians-package-repo.gpg" "https://julianfairfax.codeberg.page/package-repo/debs" || failures=1
 install_ulauncher_release || failures=1
 

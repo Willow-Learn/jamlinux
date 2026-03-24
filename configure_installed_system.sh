@@ -11,15 +11,56 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
+list_apt_source_files() {
+    if [ -f /etc/apt/sources.list ]; then
+        printf '%s\n' /etc/apt/sources.list
+    fi
+
+    find /etc/apt/sources.list.d -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) 2>/dev/null
+}
+
+find_repo_sources() {
+    local repo_url="$1"
+    local exclude_path="$2"
+    local source_file
+    local found=1
+
+    while IFS= read -r source_file; do
+        [ -n "$source_file" ] || continue
+        [ "$source_file" = "$exclude_path" ] && continue
+
+        if grep -Fqs "$repo_url" "$source_file"; then
+            printf '%s\n' "$source_file"
+            found=0
+        fi
+    done < <(list_apt_source_files)
+
+    return "$found"
+}
+
 install_repo_registration_copy() {
     local name="$1"
     local list_src="$2"
     local key_src="$3"
     local list_dest="$4"
     local key_dest="$5"
+    local repo_url="${6:-}"
+    local existing_sources
 
     if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
         warn "Skipping $name repository registration: staged metadata is missing."
+        return
+    fi
+
+    if [ -n "$repo_url" ]; then
+        existing_sources="$(find_repo_sources "$repo_url" "$list_dest" || true)"
+    else
+        existing_sources=""
+    fi
+
+    if [ -n "$existing_sources" ]; then
+        rm -f "$list_dest" "$key_dest"
+        log "Keeping existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
         return
     fi
 
@@ -35,9 +76,23 @@ install_repo_registration_dearmored() {
     local key_src="$3"
     local list_dest="$4"
     local key_dest="$5"
+    local repo_url="${6:-}"
+    local existing_sources
 
     if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
         warn "Skipping $name repository registration: staged metadata is missing."
+        return
+    fi
+
+    if [ -n "$repo_url" ]; then
+        existing_sources="$(find_repo_sources "$repo_url" "$list_dest" || true)"
+    else
+        existing_sources=""
+    fi
+
+    if [ -n "$existing_sources" ]; then
+        rm -f "$list_dest"
+        log "Keeping existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
         return
     fi
 
@@ -106,12 +161,13 @@ seed_primary_sources() {
 }
 
 seed_external_repositories() {
-    install_repo_registration_copy \
+    install_repo_registration_dearmored \
         "VS Code" \
         "/usr/local/src/jamlinux/repositories/vscode.list" \
-        "/usr/local/src/jamlinux/repositories/vscode.asc" \
+        "/usr/local/src/jamlinux/repositories/microsoft.asc" \
         "/etc/apt/sources.list.d/vscode.list" \
-        "/etc/apt/keyrings/vscode.asc"
+        "/usr/share/keyrings/microsoft.gpg" \
+        "https://packages.microsoft.com/repos/code"
 
     install_repo_registration_dearmored \
         "Julian's package repo" \
@@ -119,6 +175,24 @@ seed_external_repositories() {
         "/usr/local/src/jamlinux/repositories/julians-package-repo.asc" \
         "/etc/apt/sources.list.d/julians-package-repo.list" \
         "/usr/share/keyrings/julians-package-repo.gpg"
+}
+
+ensure_login_keyring_pam() {
+    if ! command -v pam-auth-update >/dev/null 2>&1; then
+        warn "pam-auth-update is unavailable; GNOME keyring PAM integration was not verified."
+        return
+    fi
+
+    if [ ! -f /usr/share/pam-configs/gnome-keyring ]; then
+        warn "gnome-keyring PAM profile is missing; login keyring auto-unlock may not work."
+        return
+    fi
+
+    if pam-auth-update --package --enable gnome-keyring >/dev/null 2>&1; then
+        log "Enabled PAM integration for GNOME keyring auto-unlock."
+    else
+        warn "Failed to enable GNOME keyring PAM integration."
+    fi
 }
 
 enable_first_boot_service() {
@@ -220,6 +294,7 @@ apply_grub_theme() {
 main() {
     seed_primary_sources
     seed_external_repositories
+    ensure_login_keyring_pam
     enable_first_boot_service
     apply_chromium_defaults
     seed_files_bookmarks
