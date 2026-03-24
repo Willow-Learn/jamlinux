@@ -43,9 +43,9 @@ mkdir -p "$BUILD_DIR"
 
 cd $BUILD_DIR
 
-# Initialize for Debian Trixie
+# Initialize for Debian Testing
 sudo lb config \
-    --distribution trixie \
+    --distribution testing \
     --archive-areas "main contrib non-free non-free-firmware" \
     --bootappend-install "netcfg/enable=false netcfg/choose_interface=none netcfg/disable_autoconfig=true apt-setup/use_mirror=false hw-detect/load_firmware=false" \
     --debian-installer live \
@@ -58,7 +58,7 @@ sudo lb config \
     --iso-publisher "Jamie Munro" \
     --iso-preparer "live-build" \
     --linux-packages "linux-image linux-headers" \
-    --debian-installer-distribution trixie
+    --debian-installer-distribution testing
 
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,debian-installer,preseed,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
@@ -426,6 +426,6 @@ sudo lb build
 
 #launch
 mkdir -p $BASE_DIR/dist
-cp *.iso $BASE_DIR/dist/jamlinux-v1.0-$(date +%Y%m%d).iso
+cp *.iso $BASE_DIR/dist/jamlinux-testing-$(date +%Y%m%d).iso
 
 sync

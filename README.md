@@ -42,7 +42,7 @@ qemu-system-x86_64 \
 - different browser instead of chrome?
 - different shell instead of bash?
 - different kernel version (+ kenernel manager)
-- sid instead of trixie?
+- sid instead of testing?
 - update manager:
   - detect apt get updates and alert users (probably easy)
   - update to latest "JamLinux" version (harder)

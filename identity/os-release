@@ -1,8 +1,8 @@
-PRETTY_NAME="JamLinux 1.0 (Trixie)"
+PRETTY_NAME="JamLinux 1.0 (Forky)"
 NAME="JamLinux"
 VERSION_ID="1.0"
-VERSION="1.0 (Trixie)"
-VERSION_CODENAME=trixie
+VERSION="1.0 (Forky)"
+VERSION_CODENAME=forky
 ID=jamlinux
 ID_LIKE=debian
 HOME_URL="https://github.com/Willow-Learn/jamlinux"

@@ -65,7 +65,7 @@ detect_codename() {
     fi
 
     # Fallback to the build-time default.
-    echo "${codename:-trixie}"
+    echo "${codename:-forky}"
 }
 
 install_staged_external_packages() {
