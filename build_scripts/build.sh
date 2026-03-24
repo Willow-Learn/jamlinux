@@ -63,6 +63,14 @@ sudo lb config \
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,debian-installer,preseed,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
+mkdir -p config/apt
+
+# Disable HTTP pipelining and enable retries to survive transient mirror sync
+# issues (Hash Sum mismatch) during the live-build apt-get chroot phase.
+cat > config/apt/apt.conf <<'EOF'
+Acquire::http::Pipeline-Depth "0";
+Acquire::Retries "3";
+EOF
 mkdir -p config/includes.binary/jamlinux-installer/rootfs
 mkdir -p config/includes.chroot/etc/live/config.conf.d
 mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,backgrounds/gdm,plymouth/themes,grub/themes/jamlinux}
