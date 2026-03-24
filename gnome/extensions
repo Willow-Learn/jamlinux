@@ -68,6 +68,7 @@ shift-middle-click-action='launch'
 show-apps-always-in-the-edge=true
 show-apps-at-top=false
 show-mounts-network=true
+show-trash=false
 transparency-mode='FIXED'
 unity-backlit-items=false
 
