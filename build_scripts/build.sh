@@ -336,6 +336,27 @@ ln -sf ../jamlinux-first-boot.service "$BUILD_DIR/config/includes.chroot/etc/sys
 cp "$BASE_DIR/install_external_packages.sh" "$BUILD_DIR/config/hooks/normal/0510-external-packages.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0510-external-packages.hook.chroot"
 
+# Binary hook: stage cached external .deb files into the installer payload so
+# they are available on the installed system (the installation is offline).
+cat > "$BUILD_DIR/config/hooks/normal/0600-stage-external-debs.hook.binary" <<'HOOK'
+#!/bin/bash
+set -eu
+
+src="chroot/var/lib/jamlinux/external-debs"
+dst="binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs"
+
+if [ ! -d "$src" ] || [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
+    echo "[jamlinux binary hook] No cached external .deb files to stage."
+    exit 0
+fi
+
+mkdir -p "$dst"
+cp -a "$src/." "$dst/"
+echo "[jamlinux binary hook] Staged external .deb files for installed-system provisioning:"
+ls -1 "$dst"
+HOOK
+chmod +x "$BUILD_DIR/config/hooks/normal/0600-stage-external-debs.hook.binary"
+
 # installer target payload
 PAYLOAD_DIR="$BUILD_DIR/config/includes.binary/jamlinux-installer/rootfs"
 install_payload_file "$BASE_DIR/configure_installed_system.sh" "usr/local/bin/configure_installed_system.sh"

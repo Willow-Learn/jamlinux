@@ -4,6 +4,7 @@ set -eu
 export DEBIAN_FRONTEND=noninteractive
 
 download_dir="/var/tmp/jamlinux-external-packages"
+deb_cache_dir="/var/lib/jamlinux/external-debs"
 ulauncher_deb_url="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 vscode_deb_url="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
 julian_repo_base_url="https://julianfairfax.codeberg.page/package-repo/debs"
@@ -88,6 +89,16 @@ install_local_deb() {
     local deb_path="$1"
 
     apt-get install -y --no-install-recommends "$deb_path"
+}
+
+cache_deb() {
+    local deb_path="$1"
+    local filename
+
+    filename="$(basename "$deb_path")"
+    mkdir -p "$deb_cache_dir"
+    cp "$deb_path" "$deb_cache_dir/$filename"
+    log "Cached $filename for installed-system provisioning."
 }
 
 download_packages_index() {
@@ -176,6 +187,8 @@ install_deb_from_url() {
     fi
 
     if run_with_retries "$name package download" download_file "$deb_url" "$deb_path"; then
+        cache_deb "$deb_path"
+
         if run_with_retries "$name package install" install_local_deb "$deb_path"; then
             log "Installed $package_name from a pinned .deb package."
             rm -f "$deb_path"
@@ -227,6 +240,8 @@ install_deb_from_repo_index() {
     deb_url="$base_url/$relative_deb_path"
 
     if run_with_retries "$name package download" download_file "$deb_url" "$deb_path"; then
+        cache_deb "$deb_path"
+
         if run_with_retries "$name package install" install_local_deb "$deb_path"; then
             log "Installed $package_name from $base_url package index."
             rm -f "$index_path" "$deb_path"
@@ -260,6 +275,8 @@ install_ulauncher_release() {
 
     if run_with_retries "Ulauncher release download" download_file "$ulauncher_deb_url" "$deb_path"
     then
+        cache_deb "$deb_path"
+
         if run_with_retries "Ulauncher package install" install_local_deb "$deb_path"; then
             log "Installed ulauncher from the pinned GitHub release package."
             rm -f "$deb_path"
