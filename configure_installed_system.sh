@@ -50,8 +50,8 @@ detect_codename() {
 
     # Prefer the target system's os-release, which matches the distribution
     # configured at build time (lb config --distribution).
-    if [ -f /etc/os-release ]; then
-        codename="$(. /etc/os-release && echo "${VERSION_CODENAME:-}")"
+    if [ -r /etc/os-release ]; then
+        codename="$(. /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-}")" || true
     fi
 
     if [ -z "$codename" ] && command -v lsb_release >/dev/null 2>&1; then
@@ -116,7 +116,7 @@ install_staged_external_packages() {
                "$deb_file" 2>&1; then
             log "Installed external package $(basename "$deb_file")."
         elif apt-get install -y --no-install-recommends "$deb_file" 2>&1; then
-            log "Installed external package $(basename "$deb_file") via default apt sources."
+            warn "cdrom source unavailable; installed $(basename "$deb_file") via default apt sources."
         else
             warn "apt-get install failed for $(basename "$deb_file"); falling back to dpkg."
             if dpkg -i "$deb_file" 2>&1; then
