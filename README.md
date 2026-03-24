@@ -39,7 +39,11 @@ qemu-system-x86_64 \
 - ulauncher extensions
 - different browser instead of chrome?
 - different shell instead of bash?
-- customer kernel version (+ kenernel manager)
+- different kernel version (+ kenernel manager)
 - sid instead of trixie?
+- update manager:
+  - detect apt get updates and alert users (probably easy)
+  - update to latest "JamLinux" version (harder)
+- remove "via AWSM" from reboot/power menu
 
 
