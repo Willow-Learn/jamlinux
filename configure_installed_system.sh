@@ -59,7 +59,11 @@ install_staged_external_packages() {
     # temporary apt source so that apt can resolve dependencies for the staged
     # .deb packages during offline installation.
     if [ -d /cdrom/dists ]; then
-        echo "deb [trusted=yes] file:///cdrom/ trixie main contrib non-free non-free-firmware" \
+        local codename
+        codename="$(find /cdrom/dists -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | head -1)"
+        codename="${codename:-trixie}"
+
+        echo "deb [trusted=yes] file:///cdrom/ $codename main contrib non-free non-free-firmware" \
             > "$cdrom_source"
         apt-get update \
             -o Dir::Etc::sourcelist="$cdrom_source" \
@@ -92,6 +96,9 @@ install_staged_external_packages() {
 
 seed_primary_sources() {
     local source_file="/usr/local/src/jamlinux/sources.list"
+
+    # Remove any transient apt source left by install_staged_external_packages.
+    rm -f /etc/apt/sources.list.d/jamlinux-cdrom.list
 
     if [ ! -s "$source_file" ]; then
         warn "No staged Debian sources.list was found."
