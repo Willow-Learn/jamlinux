@@ -11,109 +11,6 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
-list_apt_source_files() {
-    if [ -f /etc/apt/sources.list ]; then
-        printf '%s\n' /etc/apt/sources.list
-    fi
-
-    find /etc/apt/sources.list.d -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) 2>/dev/null
-}
-
-find_repo_sources() {
-    local repo_url="$1"
-    local exclude_path="$2"
-    local source_file
-    local found=1
-
-    while IFS= read -r source_file; do
-        [ -n "$source_file" ] || continue
-        [ "$source_file" = "$exclude_path" ] && continue
-
-        if grep -Fqs "$repo_url" "$source_file"; then
-            printf '%s\n' "$source_file"
-            found=0
-        fi
-    done < <(list_apt_source_files)
-
-    return "$found"
-}
-
-install_repo_registration_copy() {
-    local name="$1"
-    local list_src="$2"
-    local key_src="$3"
-    local list_dest="$4"
-    local key_dest="$5"
-    local repo_url="${6:-}"
-    local existing_sources
-
-    if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
-        warn "Skipping $name repository registration: staged metadata is missing."
-        return
-    fi
-
-    if [ -n "$repo_url" ]; then
-        existing_sources="$(find_repo_sources "$repo_url" "$list_dest" || true)"
-    else
-        existing_sources=""
-    fi
-
-    if [ -n "$existing_sources" ]; then
-        rm -f "$list_dest" "$key_dest"
-        log "Keeping existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
-        return
-    fi
-
-    mkdir -p "$(dirname "$list_dest")" "$(dirname "$key_dest")"
-    install -m 0644 "$key_src" "$key_dest"
-    install -m 0644 "$list_src" "$list_dest"
-    log "Registered the $name repository for future updates."
-}
-
-install_repo_registration_dearmored() {
-    local name="$1"
-    local list_src="$2"
-    local key_src="$3"
-    local list_dest="$4"
-    local key_dest="$5"
-    local repo_url="${6:-}"
-    local existing_sources
-
-    if [ ! -f "$list_src" ] || [ ! -f "$key_src" ]; then
-        warn "Skipping $name repository registration: staged metadata is missing."
-        return
-    fi
-
-    if [ -n "$repo_url" ]; then
-        existing_sources="$(find_repo_sources "$repo_url" "$list_dest" || true)"
-    else
-        existing_sources=""
-    fi
-
-    if [ -n "$existing_sources" ]; then
-        rm -f "$list_dest"
-        log "Keeping existing $name repository configuration from $(printf '%s' "$existing_sources" | tr '\n' ' ')."
-        return
-    fi
-
-    mkdir -p "$(dirname "$list_dest")" "$(dirname "$key_dest")"
-    install -m 0644 "$list_src" "$list_dest"
-
-    if [ -f "$key_dest" ]; then
-        log "Keeping existing $name repository keyring."
-        return
-    fi
-
-    if ! command -v gpg >/dev/null 2>&1; then
-        warn "gpg is unavailable; could not install the $name repository keyring."
-        return
-    fi
-
-    gpg --batch --yes --dearmor --output "$key_dest" "$key_src"
-    chmod 0644 "$key_dest"
-    log "Registered the $name repository for future updates."
-}
-
 ensure_bookmark_lines() {
     local target_file="$1"
     local home_dir="$2"
@@ -158,23 +55,6 @@ seed_primary_sources() {
 
     install -m 0644 "$source_file" /etc/apt/sources.list
     log "Installed Debian package sources."
-}
-
-seed_external_repositories() {
-    install_repo_registration_dearmored \
-        "VS Code" \
-        "/usr/local/src/jamlinux/repositories/vscode.list" \
-        "/usr/local/src/jamlinux/repositories/microsoft.asc" \
-        "/etc/apt/sources.list.d/vscode.list" \
-        "/usr/share/keyrings/microsoft.gpg" \
-        "https://packages.microsoft.com/repos/code"
-
-    install_repo_registration_dearmored \
-        "Julian's package repo" \
-        "/usr/local/src/jamlinux/repositories/julians-package-repo.list" \
-        "/usr/local/src/jamlinux/repositories/julians-package-repo.asc" \
-        "/etc/apt/sources.list.d/julians-package-repo.list" \
-        "/usr/share/keyrings/julians-package-repo.gpg"
 }
 
 ensure_login_keyring_pam() {
@@ -293,7 +173,6 @@ apply_grub_theme() {
 
 main() {
     seed_primary_sources
-    seed_external_repositories
     ensure_login_keyring_pam
     enable_first_boot_service
     apply_chromium_defaults

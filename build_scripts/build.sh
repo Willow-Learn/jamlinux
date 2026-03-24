@@ -69,7 +69,6 @@ mkdir -p config/includes.chroot/usr/share/{gnome-shell/extensions,themes,icons,b
 mkdir -p config/includes.chroot/usr/share/images/jamlinux
 mkdir -p config/includes.chroot/usr/local/bin
 mkdir -p config/includes.chroot/usr/local/src/jamlinux
-mkdir -p config/includes.chroot/usr/local/src/jamlinux/repositories
 mkdir -p config/includes.chroot/etc/systemd/system
 mkdir -p config/includes.chroot/etc/systemd/system/multi-user.target.wants
 mkdir -p config/includes.chroot/var/lib/jamlinux
@@ -82,11 +81,6 @@ else
     echo "No local GNOME Shell extensions found in $BASE_DIR/extensions"
 fi
 
-# Stage third-party repository metadata for a post-package install hook.
-cp "$BASE_DIR/sources/vscode.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/vscode.list"
-cp "$BASE_DIR/sources/vscode.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/microsoft.asc"
-cp "$BASE_DIR/sources/julians-package-repo.list.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.list"
-cp "$BASE_DIR/sources/julians-package-repo.key.chroot" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/repositories/julians-package-repo.asc"
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/etc/apt/sources.list"
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/sources.list"
 
@@ -352,10 +346,6 @@ install_payload_file "$BASE_DIR/install_theme.sh" "usr/local/bin/install_theme.s
 install_payload_file "$BASE_DIR/update_dconf.sh" "usr/local/bin/update_dconf.sh"
 install_payload_file "$BASE_DIR/systemd/jamlinux-first-boot.service" "etc/systemd/system/jamlinux-first-boot.service"
 install_payload_file "$BASE_DIR/sources/sources.list" "usr/local/src/jamlinux/sources.list"
-install_payload_file "$BASE_DIR/sources/vscode.list.chroot" "usr/local/src/jamlinux/repositories/vscode.list"
-install_payload_file "$BASE_DIR/sources/vscode.key.chroot" "usr/local/src/jamlinux/repositories/microsoft.asc"
-install_payload_file "$BASE_DIR/sources/julians-package-repo.list.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.list"
-install_payload_file "$BASE_DIR/sources/julians-package-repo.key.chroot" "usr/local/src/jamlinux/repositories/julians-package-repo.asc"
 install_payload_file "$BASE_DIR/grub/grub_branding.cfg" "etc/default/grub.d/99-custom.cfg"
 install_payload_file "$BASE_DIR/grub/theme.txt" "usr/share/grub/themes/jamlinux/theme.txt"
 install_payload_file "$SPLASH_PNG" "usr/share/grub/themes/jamlinux/splash.png"
