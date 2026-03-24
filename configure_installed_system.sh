@@ -49,7 +49,7 @@ install_staged_external_packages() {
     local deb_dir="/var/lib/jamlinux/external-debs"
     local deb_file
 
-    if [ ! -d "$deb_dir" ] || [ -z "$(ls -A "$deb_dir" 2>/dev/null)" ]; then
+    if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
         warn "No staged external .deb packages found."
         return
     fi
@@ -57,11 +57,11 @@ install_staged_external_packages() {
     for deb_file in "$deb_dir"/*.deb; do
         [ -f "$deb_file" ] || continue
 
-        if dpkg -i "$deb_file" >/dev/null 2>&1; then
+        if dpkg -i "$deb_file" 2>&1; then
             log "Installed external package $(basename "$deb_file")."
         else
             warn "Failed to install $(basename "$deb_file"); attempting dependency fix."
-            if apt-get install -f -y --no-install-recommends >/dev/null 2>&1; then
+            if apt-get install -f -y --no-install-recommends 2>&1; then
                 log "Resolved dependencies for $(basename "$deb_file")."
             else
                 warn "Could not resolve dependencies for $(basename "$deb_file")."

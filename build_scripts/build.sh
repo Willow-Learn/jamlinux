@@ -345,7 +345,7 @@ set -eu
 src="chroot/var/lib/jamlinux/external-debs"
 dst="binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs"
 
-if [ ! -d "$src" ] || [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
+if ! find "$src" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
     echo "[jamlinux binary hook] No cached external .deb files to stage."
     exit 0
 fi
