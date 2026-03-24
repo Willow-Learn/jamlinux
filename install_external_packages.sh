@@ -311,12 +311,17 @@ for pkg in $required_packages; do
     fi
 done
 
-cached_count="$(find "$deb_cache_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | wc -l)"
-expected_count="$(echo "$required_packages" | wc -w)"
-if [ "$cached_count" -lt "$expected_count" ]; then
-    log "VERIFICATION FAILED: Expected $expected_count cached .deb files in $deb_cache_dir but found $cached_count."
-    failures=1
-else
+cached_count=0
+for pkg in $required_packages; do
+    if find "$deb_cache_dir" -maxdepth 1 -name "${pkg}*.deb" -o -name "${pkg}_*.deb" 2>/dev/null | grep -q .; then
+        cached_count=$((cached_count + 1))
+    else
+        log "VERIFICATION FAILED: No cached .deb found for $pkg in $deb_cache_dir."
+        failures=1
+    fi
+done
+
+if [ "$failures" -eq 0 ]; then
     log "Verified: $cached_count .deb files cached in $deb_cache_dir."
 fi
 
