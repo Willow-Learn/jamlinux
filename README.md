@@ -22,6 +22,7 @@ bash build_scripts/copy-reference-system/run.sh
 ```
 
 ## Run in QEMU
+```
 qemu-system-x86_64 \
   -enable-kvm \
   -cpu host \
@@ -31,6 +32,7 @@ qemu-system-x86_64 \
   -boot d \
   -display gtk,gl=on \
   -device virtio-vga
+```
 
 # Road Map
 - gnome top bar on all screens
