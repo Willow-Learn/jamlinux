@@ -45,14 +45,41 @@ ensure_bookmark_lines() {
     mv "$tmp_file" "$target_file"
 }
 
+detect_codename() {
+    local codename=""
+
+    # Prefer the target system's os-release, which matches the distribution
+    # configured at build time (lb config --distribution).
+    if [ -f /etc/os-release ]; then
+        codename="$(. /etc/os-release && echo "${VERSION_CODENAME:-}")"
+    fi
+
+    if [ -z "$codename" ] && command -v lsb_release >/dev/null 2>&1; then
+        codename="$(lsb_release -cs 2>/dev/null)" || true
+    fi
+
+    # Fallback to the build-time default.
+    echo "${codename:-trixie}"
+}
+
 install_staged_external_packages() {
     local deb_dir="/var/lib/jamlinux/external-debs"
     local deb_file
     local cdrom_source="/etc/apt/sources.list.d/jamlinux-cdrom.list"
+    local have_cdrom_source=0
 
     if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
         warn "No staged external .deb packages found."
         return
+    fi
+
+    # Verify the live media bind-mount is actually present.  The preseed
+    # late_command mounts /cdrom into the target, but if the mount failed
+    # silently the directory will be empty and dependency resolution will
+    # break.
+    if [ ! -d /cdrom/dists ]; then
+        warn "/cdrom/dists not found — the live media bind-mount may have failed."
+        warn "Dependency resolution for external packages will not be available."
     fi
 
     # When the live media is bind-mounted into the target, register it as a
@@ -60,23 +87,36 @@ install_staged_external_packages() {
     # .deb packages during offline installation.
     if [ -d /cdrom/dists ]; then
         local codename
-        codename="$(find /cdrom/dists -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | head -1)"
-        codename="${codename:-trixie}"
+        codename="$(detect_codename)"
 
         echo "deb [trusted=yes] file:///cdrom/ $codename main contrib non-free non-free-firmware" \
             > "$cdrom_source"
-        apt-get update \
+        if apt-get update \
             -o Dir::Etc::sourcelist="$cdrom_source" \
             -o Dir::Etc::sourceparts="-" \
-            -o APT::Get::List-Cleanup="0" 2>&1 || warn "Failed to index live media packages."
-        log "Registered live media as a temporary package source."
+            -o APT::Get::List-Cleanup="0" 2>&1; then
+            have_cdrom_source=1
+            log "Registered live media as a temporary package source (codename=$codename)."
+        else
+            warn "Failed to index live media packages."
+        fi
     fi
 
     for deb_file in "$deb_dir"/*.deb; do
         [ -f "$deb_file" ] || continue
 
-        if apt-get install -y --no-install-recommends "$deb_file" 2>&1; then
+        # When the cdrom apt source is available, point apt-get exclusively at
+        # it so that dependency resolution does not depend on whatever the
+        # Debian Installer left in the system sources.list (which may be empty
+        # or stale when apt-setup/use_mirror is false).
+        if [ "$have_cdrom_source" -eq 1 ] && \
+           apt-get install -y --no-install-recommends \
+               -o Dir::Etc::sourcelist="$cdrom_source" \
+               -o Dir::Etc::sourceparts="-" \
+               "$deb_file" 2>&1; then
             log "Installed external package $(basename "$deb_file")."
+        elif apt-get install -y --no-install-recommends "$deb_file" 2>&1; then
+            log "Installed external package $(basename "$deb_file") via default apt sources."
         else
             warn "apt-get install failed for $(basename "$deb_file"); falling back to dpkg."
             if dpkg -i "$deb_file" 2>&1; then
