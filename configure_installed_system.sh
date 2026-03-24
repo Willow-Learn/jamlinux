@@ -11,6 +11,12 @@ warn() {
     echo "[jamlinux installed-system] warning: $*" >&2
 }
 
+package_installed() {
+    local package_name="$1"
+
+    dpkg-query -W -f='${Status}' "$package_name" 2>/dev/null | grep -q "install ok installed"
+}
+
 ensure_bookmark_lines() {
     local target_file="$1"
     local home_dir="$2"
@@ -65,12 +71,13 @@ detect_codename() {
 install_staged_external_packages() {
     local deb_dir="/var/lib/jamlinux/external-debs"
     local deb_file
+    local package_name
     local cdrom_source="/etc/apt/sources.list.d/jamlinux-cdrom.list"
-    local have_cdrom_source=0
+    local staged_count=0
 
     if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
         warn "No staged external .deb packages found."
-        return
+        return 1
     fi
 
     # Verify the live media bind-mount is actually present.  The preseed
@@ -80,58 +87,70 @@ install_staged_external_packages() {
     if [ ! -d /cdrom/dists ]; then
         warn "/cdrom/dists not found — the live media bind-mount may have failed."
         warn "Dependency resolution for external packages will not be available."
+        return 1
     fi
 
     # When the live media is bind-mounted into the target, register it as a
     # temporary apt source so that apt can resolve dependencies for the staged
     # .deb packages during offline installation.
-    if [ -d /cdrom/dists ]; then
-        local codename
-        codename="$(detect_codename)"
+    local codename
+    codename="$(detect_codename)"
 
-        echo "deb [trusted=yes] file:///cdrom/ $codename main contrib non-free non-free-firmware" \
-            > "$cdrom_source"
-        if apt-get update \
-            -o Dir::Etc::sourcelist="$cdrom_source" \
-            -o Dir::Etc::sourceparts="-" \
-            -o APT::Get::List-Cleanup="0" 2>&1; then
-            have_cdrom_source=1
-            log "Registered live media as a temporary package source (codename=$codename)."
-        else
-            warn "Failed to index live media packages."
-        fi
+    echo "deb [trusted=yes] file:///cdrom/ $codename main contrib non-free non-free-firmware" \
+        > "$cdrom_source"
+    if apt-get update \
+        -o Dir::Etc::sourcelist="$cdrom_source" \
+        -o Dir::Etc::sourceparts="-" \
+        -o APT::Get::List-Cleanup="0" 2>&1; then
+        log "Registered live media as a temporary package source (codename=$codename)."
+    else
+        warn "Failed to index live media packages."
+        rm -f "$cdrom_source"
+        return 1
     fi
 
     for deb_file in "$deb_dir"/*.deb; do
         [ -f "$deb_file" ] || continue
+        staged_count=$((staged_count + 1))
 
-        # When the cdrom apt source is available, point apt-get exclusively at
-        # it so that dependency resolution does not depend on whatever the
-        # Debian Installer left in the system sources.list (which may be empty
-        # or stale when apt-setup/use_mirror is false).
-        if [ "$have_cdrom_source" -eq 1 ] && \
-           apt-get install -y --no-install-recommends \
-               -o Dir::Etc::sourcelist="$cdrom_source" \
-               -o Dir::Etc::sourceparts="-" \
-               "$deb_file" 2>&1; then
+        package_name="$(dpkg-deb -f "$deb_file" Package 2>/dev/null || true)"
+        if [ -z "$package_name" ]; then
+            warn "Could not determine package name from $(basename "$deb_file")."
+            rm -f "$cdrom_source"
+            return 1
+        fi
+
+        # Resolve dependencies strictly from the live media to prevent silent
+        # target installs that succeed only when networking happens to be on.
+        if apt-get install -y --no-install-recommends \
+            -o Dir::Etc::sourcelist="$cdrom_source" \
+            -o Dir::Etc::sourceparts="-" \
+            "$deb_file" 2>&1; then
             log "Installed external package $(basename "$deb_file")."
-        elif apt-get install -y --no-install-recommends "$deb_file" 2>&1; then
-            warn "cdrom source unavailable; installed $(basename "$deb_file") via default apt sources."
         else
             warn "apt-get install failed for $(basename "$deb_file"); falling back to dpkg."
             if dpkg -i "$deb_file" 2>&1; then
                 log "Installed external package $(basename "$deb_file") via dpkg."
-                apt-get install -f -y --no-install-recommends 2>&1 || \
+                if ! apt-get install -f -y --no-install-recommends \
+                    -o Dir::Etc::sourcelist="$cdrom_source" \
+                    -o Dir::Etc::sourceparts="-" 2>&1; then
                     warn "Could not resolve dependencies for $(basename "$deb_file")."
+                fi
             else
                 warn "Failed to install $(basename "$deb_file")."
             fi
+        fi
+
+        if ! package_installed "$package_name"; then
+            warn "External package $package_name is not installed after provisioning $(basename "$deb_file")."
+            rm -f "$cdrom_source"
+            return 1
         fi
     done
 
     rm -f "$cdrom_source"
     rm -rf "$deb_dir"
-    log "External package installation complete."
+    log "External package installation complete ($staged_count packages verified)."
 }
 
 seed_primary_sources() {

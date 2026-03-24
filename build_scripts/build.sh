@@ -4,7 +4,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 export BUILD_DIR="$BASE_DIR/build/$(date +%Y%m%d)"
-KERNEL_PACKAGE_STUB="6.19.8+deb14"
 
 install_payload_file() {
     local source="$1"
@@ -58,23 +57,13 @@ sudo lb config \
     --iso-application "JamLinux" \
     --iso-publisher "Jamie Munro" \
     --iso-preparer "live-build" \
-    --linux-packages "linux-image-${KERNEL_PACKAGE_STUB} linux-headers-${KERNEL_PACKAGE_STUB}" \
+    --linux-packages "linux-image linux-headers" \
     --debian-installer-distribution trixie
 
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,debian-installer,preseed,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/apt
-
-cat > "$BUILD_DIR/config/archives/jamlinux-kernel-sid.list.chroot" <<'EOF'
-deb http://deb.debian.org/debian sid main
-EOF
-
-cat > "$BUILD_DIR/config/archives/jamlinux-kernel-sid.pref.chroot" <<'EOF'
-Package: *
-Pin: release n=sid
-Pin-Priority: 100
-EOF
 
 # Disable HTTP pipelining and enable retries to survive transient mirror sync
 # issues (Hash Sum mismatch) during the live-build apt-get chroot phase.
@@ -361,8 +350,10 @@ cat > "$BUILD_DIR/config/hooks/normal/0600-stage-external-debs.hook.binary" <<'H
 #!/bin/bash
 set -eu
 
-src="chroot/var/lib/jamlinux/external-debs"
-dst="binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs"
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+build_root="$(CDPATH= cd -- "$script_dir/../../.." && pwd)"
+src="$build_root/chroot/var/lib/jamlinux/external-debs"
+dst="$build_root/binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs"
 
 # Count how many .deb files were cached by the chroot hook.  The build must
 # fail if the expected external packages (VS Code, adw-gtk3, Ulauncher) are

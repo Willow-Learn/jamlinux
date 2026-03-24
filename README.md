@@ -10,8 +10,6 @@ Opinionated Gnome 3 desktop environment, optimised for British English.
 sudo bash build_scripts/build.sh
 ```
 
-Current builds pin the Linux kernel to the latest stable 6.19 branch release available from Debian sid (`6.19.8`).
-
 ## Resume Build
 ```
 cd $BUILD_DIR
@@ -43,7 +41,7 @@ qemu-system-x86_64 \
 - ulauncher extensions
 - different browser instead of chrome?
 - different shell instead of bash?
-- kernel manager for future kernel branch changes
+- different kernel version (+ kenernel manager)
 - sid instead of trixie?
 - update manager:
   - detect apt get updates and alert users (probably easy)
