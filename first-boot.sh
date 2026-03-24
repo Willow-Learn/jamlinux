@@ -4,6 +4,7 @@ set -eu
 export DEBIAN_FRONTEND=noninteractive
 
 MARKER_FILE="/var/lib/jamlinux/first-boot-complete"
+DEB_CACHE_DIR="/var/lib/jamlinux/external-debs"
 FLATPAK_REMOTE_URL="https://dl.flathub.org/repo/flathub.flatpakrepo"
 FLATPAK_APPS=(
     com.spotify.Client
@@ -11,6 +12,17 @@ FLATPAK_APPS=(
     com.slack.Slack
     us.zoom.Zoom
 )
+
+# External .deb package sources
+# To add a new package, add its name to EXTERNAL_PACKAGES and define a
+# matching install_<name> function below.  The framework calls each one
+# with retries and verifies installation afterwards.
+ULAUNCHER_DEB_URL="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
+VSCODE_DEB_URL="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+JULIAN_REPO_URL="https://julianfairfax.codeberg.page/package-repo/debs"
+
+EXTERNAL_PACKAGES=(ulauncher code adw-gtk3)
+
 MAX_ATTEMPTS="${JAMLINUX_FIRST_BOOT_RETRY_ATTEMPTS:-4}"
 INITIAL_RETRY_DELAY="${JAMLINUX_FIRST_BOOT_RETRY_DELAY:-15}"
 
@@ -45,6 +57,142 @@ run_with_retries() {
         delay=$((delay * 2))
     done
 }
+
+package_installed() {
+    dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+}
+
+find_cached_deb() {
+    local pkg="$1"
+    find "$DEB_CACHE_DIR" -maxdepth 1 \( -name "${pkg}_*.deb" -o -name "${pkg}.deb" \) \
+        -type f 2>/dev/null | head -1
+}
+
+# ---------------------------------------------------------------------------
+# Per-package install functions
+# Each function tries the build-time cached .deb first, then falls back to
+# downloading from the network.  Add new packages by writing a new function
+# and appending the package name to EXTERNAL_PACKAGES above.
+# ---------------------------------------------------------------------------
+
+install_ulauncher() {
+    local cached
+    cached="$(find_cached_deb ulauncher)"
+
+    if [ -n "$cached" ]; then
+        log "Installing ulauncher from cache: $(basename "$cached")"
+        if apt-get install -y --no-install-recommends "$cached"; then
+            return 0
+        fi
+        log "Cache install failed for ulauncher; downloading."
+    fi
+
+    local tmp="/var/tmp/jamlinux-ulauncher.deb"
+    curl -fsSL --retry 3 --retry-all-errors --output "$tmp" "$ULAUNCHER_DEB_URL"
+    apt-get install -y --no-install-recommends "$tmp"
+    local rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
+install_code() {
+    local cached
+    cached="$(find_cached_deb code)"
+
+    if [ -n "$cached" ]; then
+        log "Installing code from cache: $(basename "$cached")"
+        if apt-get install -y --no-install-recommends "$cached"; then
+            return 0
+        fi
+        log "Cache install failed for code; downloading."
+    fi
+
+    local tmp="/var/tmp/jamlinux-code.deb"
+    curl -fsSL --retry 3 --retry-all-errors --output "$tmp" "$VSCODE_DEB_URL"
+    apt-get install -y --no-install-recommends "$tmp"
+    local rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
+install_adw-gtk3() {
+    local cached
+    cached="$(find_cached_deb adw-gtk3)"
+
+    if [ -n "$cached" ]; then
+        log "Installing adw-gtk3 from cache: $(basename "$cached")"
+        if apt-get install -y --no-install-recommends "$cached"; then
+            return 0
+        fi
+        log "Cache install failed for adw-gtk3; downloading from repo."
+    fi
+
+    local list_file="/etc/apt/sources.list.d/julianfairfax.list"
+    echo "deb [trusted=yes] $JULIAN_REPO_URL packages main" > "$list_file"
+    apt-get update \
+        -o Dir::Etc::sourcelist="$list_file" \
+        -o Dir::Etc::sourceparts="-" \
+        -o APT::Get::List-Cleanup="0"
+    apt-get install -y --no-install-recommends adw-gtk3
+    local rc=$?
+    rm -f "$list_file"
+    return $rc
+}
+
+# ---------------------------------------------------------------------------
+
+ensure_apt_sources() {
+    local staged="/usr/local/src/jamlinux/sources.list"
+
+    if [ ! -s /etc/apt/sources.list ] && [ -s "$staged" ]; then
+        install -m 0644 "$staged" /etc/apt/sources.list
+        log "Restored apt sources.list from staged copy."
+    fi
+}
+
+install_external_packages() {
+    local pkg failures=0
+
+    ensure_apt_sources
+
+    if ! run_with_retries "APT metadata refresh" apt-get update; then
+        log "WARNING: Could not refresh APT metadata; cached installs may still work."
+    fi
+
+    for pkg in "${EXTERNAL_PACKAGES[@]}"; do
+        if package_installed "$pkg"; then
+            log "$pkg is already installed."
+            continue
+        fi
+
+        if run_with_retries "$pkg install" "install_${pkg}"; then
+            log "Installed $pkg."
+        else
+            log "Failed to install $pkg."
+            failures=$((failures + 1))
+        fi
+    done
+
+    rm -rf "$DEB_CACHE_DIR"
+
+    for pkg in "${EXTERNAL_PACKAGES[@]}"; do
+        if ! package_installed "$pkg"; then
+            log "VERIFICATION FAILED: $pkg is not installed."
+            failures=$((failures + 1))
+        fi
+    done
+
+    if [ "$failures" -gt 0 ]; then
+        log "$failures external package(s) failed."
+        return 1
+    fi
+
+    log "All external packages installed and verified."
+}
+
+# ---------------------------------------------------------------------------
+# Flatpak section
+# ---------------------------------------------------------------------------
 
 configure_flathub() {
     flatpak remote-add --if-not-exists --system flathub "$FLATPAK_REMOTE_URL"
@@ -96,6 +244,8 @@ install_bundled_flatpaks() {
     done
 }
 
+# ---------------------------------------------------------------------------
+
 main() {
     if [ -f "$MARKER_FILE" ]; then
         log "First-boot tasks are already complete."
@@ -104,11 +254,24 @@ main() {
 
     mkdir -p "$(dirname "$MARKER_FILE")"
 
-    if install_bundled_flatpaks; then
-        log "Bundled Flatpak installation is complete."
+    local all_ok=true
+
+    if install_external_packages; then
+        log "External package installation complete."
     else
-        log "Bundled Flatpak installation is still incomplete."
-        log "First-boot tasks are incomplete and will retry on the next boot."
+        log "External package installation incomplete — will retry on next boot."
+        all_ok=false
+    fi
+
+    if install_bundled_flatpaks; then
+        log "Bundled Flatpak installation complete."
+    else
+        log "Bundled Flatpak installation incomplete — will retry on next boot."
+        all_ok=false
+    fi
+
+    if [ "$all_ok" = false ]; then
+        log "First-boot tasks incomplete; will retry on next boot."
         exit 1
     fi
 

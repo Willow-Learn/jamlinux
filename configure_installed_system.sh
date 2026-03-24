@@ -51,113 +51,8 @@ ensure_bookmark_lines() {
     mv "$tmp_file" "$target_file"
 }
 
-detect_codename() {
-    local codename=""
-
-    # Prefer the target system's os-release, which matches the distribution
-    # configured at build time (lb config --distribution).
-    if [ -r /etc/os-release ]; then
-        codename="$(. /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-}")" || true
-    fi
-
-    if [ -z "$codename" ] && command -v lsb_release >/dev/null 2>&1; then
-        codename="$(lsb_release -cs 2>/dev/null)" || true
-    fi
-
-    # Fallback to the build-time default.
-    echo "${codename:-trixie}"
-}
-
-install_staged_external_packages() {
-    local deb_dir="/var/lib/jamlinux/external-debs"
-    local deb_file
-    local package_name
-    local cdrom_source="/etc/apt/sources.list.d/jamlinux-cdrom.list"
-    local staged_count=0
-
-    if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
-        warn "No staged external .deb packages found."
-        return 1
-    fi
-
-    # Verify the live media bind-mount is actually present.  The preseed
-    # late_command mounts /cdrom into the target, but if the mount failed
-    # silently the directory will be empty and dependency resolution will
-    # break.
-    if [ ! -d /cdrom/dists ]; then
-        warn "/cdrom/dists not found — the live media bind-mount may have failed."
-        warn "Dependency resolution for external packages will not be available."
-        return 1
-    fi
-
-    # When the live media is bind-mounted into the target, register it as a
-    # temporary apt source so that apt can resolve dependencies for the staged
-    # .deb packages during offline installation.
-    local codename
-    codename="$(detect_codename)"
-
-    echo "deb [trusted=yes] file:///cdrom/ $codename main contrib non-free non-free-firmware" \
-        > "$cdrom_source"
-    if apt-get update \
-        -o Dir::Etc::sourcelist="$cdrom_source" \
-        -o Dir::Etc::sourceparts="-" \
-        -o APT::Get::List-Cleanup="0" 2>&1; then
-        log "Registered live media as a temporary package source (codename=$codename)."
-    else
-        warn "Failed to index live media packages."
-        rm -f "$cdrom_source"
-        return 1
-    fi
-
-    for deb_file in "$deb_dir"/*.deb; do
-        [ -f "$deb_file" ] || continue
-        staged_count=$((staged_count + 1))
-
-        package_name="$(dpkg-deb -f "$deb_file" Package 2>/dev/null || true)"
-        if [ -z "$package_name" ]; then
-            warn "Could not determine package name from $(basename "$deb_file")."
-            rm -f "$cdrom_source"
-            return 1
-        fi
-
-        # Resolve dependencies strictly from the live media to prevent silent
-        # target installs that succeed only when networking happens to be on.
-        if apt-get install -y --no-install-recommends \
-            -o Dir::Etc::sourcelist="$cdrom_source" \
-            -o Dir::Etc::sourceparts="-" \
-            "$deb_file" 2>&1; then
-            log "Installed external package $(basename "$deb_file")."
-        else
-            warn "apt-get install failed for $(basename "$deb_file"); falling back to dpkg."
-            if dpkg -i "$deb_file" 2>&1; then
-                log "Installed external package $(basename "$deb_file") via dpkg."
-                if ! apt-get install -f -y --no-install-recommends \
-                    -o Dir::Etc::sourcelist="$cdrom_source" \
-                    -o Dir::Etc::sourceparts="-" 2>&1; then
-                    warn "Could not resolve dependencies for $(basename "$deb_file")."
-                fi
-            else
-                warn "Failed to install $(basename "$deb_file")."
-            fi
-        fi
-
-        if ! package_installed "$package_name"; then
-            warn "External package $package_name is not installed after provisioning $(basename "$deb_file")."
-            rm -f "$cdrom_source"
-            return 1
-        fi
-    done
-
-    rm -f "$cdrom_source"
-    rm -rf "$deb_dir"
-    log "External package installation complete ($staged_count packages verified)."
-}
-
 seed_primary_sources() {
     local source_file="/usr/local/src/jamlinux/sources.list"
-
-    # Remove any transient apt source left by install_staged_external_packages.
-    rm -f /etc/apt/sources.list.d/jamlinux-cdrom.list
 
     if [ ! -s "$source_file" ]; then
         warn "No staged Debian sources.list was found."
@@ -283,16 +178,15 @@ apply_grub_theme() {
 }
 
 main() {
-    install_staged_external_packages
     seed_primary_sources
     ensure_login_keyring_pam
     enable_first_boot_service
-    apply_chromium_defaults
-    seed_files_bookmarks
-    apply_dconf_databases
-    apply_shell_theme
-    apply_plymouth_theme
-    apply_grub_theme
+    apply_chromium_defaults || warn "Chromium defaults step failed."
+    seed_files_bookmarks || warn "Bookmarks step failed."
+    apply_dconf_databases || warn "dconf step failed."
+    apply_shell_theme || warn "Theme step failed."
+    apply_plymouth_theme || warn "Plymouth step failed."
+    apply_grub_theme || warn "GRUB step failed."
     log "Installed-system activation complete."
 }
 
