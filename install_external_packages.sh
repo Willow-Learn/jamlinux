@@ -290,6 +290,7 @@ install_ulauncher_release() {
     fi
 }
 
+required_packages="code adw-gtk3 ulauncher"
 failures=0
 
 mkdir -p "$download_dir"
@@ -298,8 +299,34 @@ install_deb_from_url "VS Code" "code" "$vscode_deb_url" || failures=1
 install_deb_from_repo_index "Julian package repo" "adw-gtk3" "amd64" "$julian_repo_base_url" "packages" "main" || failures=1
 install_ulauncher_release || failures=1
 
+# Post-install verification: confirm every required package is installed and
+# its .deb is cached for the offline installer payload, regardless of what
+# the install functions reported.  This catches subtle edge cases (e.g. an
+# install command returning 0 without actually installing the package, or the
+# .deb cache copy failing silently).
+for pkg in $required_packages; do
+    if ! package_installed "$pkg"; then
+        log "VERIFICATION FAILED: $pkg is not installed."
+        failures=1
+    fi
+done
+
+cached_count=0
+for pkg in $required_packages; do
+    if find "$deb_cache_dir" -maxdepth 1 -name "${pkg}*.deb" -o -name "${pkg}_*.deb" 2>/dev/null | grep -q .; then
+        cached_count=$((cached_count + 1))
+    else
+        log "VERIFICATION FAILED: No cached .deb found for $pkg in $deb_cache_dir."
+        failures=1
+    fi
+done
+
+if [ "$failures" -eq 0 ]; then
+    log "Verified: $cached_count .deb files cached in $deb_cache_dir."
+fi
+
 if [ "$failures" -ne 0 ]; then
-    log "One or more external packages could not be installed or refreshed."
+    log "One or more external packages could not be installed or verified."
     if [ "$strict_mode" -eq 1 ]; then
         exit 1
     fi

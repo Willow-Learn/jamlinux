@@ -345,14 +345,19 @@ set -eu
 src="chroot/var/lib/jamlinux/external-debs"
 dst="binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs"
 
-if ! find "$src" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
-    echo "[jamlinux binary hook] No cached external .deb files to stage."
-    exit 0
+# Count how many .deb files were cached by the chroot hook.  The build must
+# fail if the expected external packages (VS Code, adw-gtk3, Ulauncher) are
+# missing — otherwise the installed system will silently lack them.
+staged_count="$(find "$src" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | wc -l)"
+if [ "$staged_count" -lt 3 ]; then
+    echo "[jamlinux binary hook] ERROR: Expected at least 3 cached external .deb files but found $staged_count in $src."
+    echo "[jamlinux binary hook] The installed system will be missing third-party packages. Aborting build."
+    exit 1
 fi
 
 mkdir -p "$dst"
 cp -a "$src/." "$dst/"
-echo "[jamlinux binary hook] Staged external .deb files for installed-system provisioning:"
+echo "[jamlinux binary hook] Staged $staged_count external .deb files for installed-system provisioning:"
 ls -1 "$dst"
 HOOK
 chmod +x "$BUILD_DIR/config/hooks/normal/0600-stage-external-debs.hook.binary"
