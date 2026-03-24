@@ -45,6 +45,34 @@ ensure_bookmark_lines() {
     mv "$tmp_file" "$target_file"
 }
 
+install_staged_external_packages() {
+    local deb_dir="/var/lib/jamlinux/external-debs"
+    local deb_file
+
+    if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
+        warn "No staged external .deb packages found."
+        return
+    fi
+
+    for deb_file in "$deb_dir"/*.deb; do
+        [ -f "$deb_file" ] || continue
+
+        if dpkg -i "$deb_file" 2>&1; then
+            log "Installed external package $(basename "$deb_file")."
+        else
+            warn "Failed to install $(basename "$deb_file"); attempting dependency fix."
+            if apt-get install -f -y --no-install-recommends 2>&1; then
+                log "Resolved dependencies for $(basename "$deb_file")."
+            else
+                warn "Could not resolve dependencies for $(basename "$deb_file")."
+            fi
+        fi
+    done
+
+    rm -rf "$deb_dir"
+    log "External package installation complete."
+}
+
 seed_primary_sources() {
     local source_file="/usr/local/src/jamlinux/sources.list"
 
@@ -172,6 +200,7 @@ apply_grub_theme() {
 }
 
 main() {
+    install_staged_external_packages
     seed_primary_sources
     ensure_login_keyring_pam
     enable_first_boot_service
