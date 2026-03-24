@@ -48,27 +48,44 @@ ensure_bookmark_lines() {
 install_staged_external_packages() {
     local deb_dir="/var/lib/jamlinux/external-debs"
     local deb_file
+    local cdrom_source="/etc/apt/sources.list.d/jamlinux-cdrom.list"
 
     if ! find "$deb_dir" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | grep -q .; then
         warn "No staged external .deb packages found."
         return
     fi
 
+    # When the live media is bind-mounted into the target, register it as a
+    # temporary apt source so that apt can resolve dependencies for the staged
+    # .deb packages during offline installation.
+    if [ -d /cdrom/dists ]; then
+        echo "deb [trusted=yes] file:///cdrom/ trixie main contrib non-free non-free-firmware" \
+            > "$cdrom_source"
+        apt-get update \
+            -o Dir::Etc::sourcelist="$cdrom_source" \
+            -o Dir::Etc::sourceparts="-" \
+            -o APT::Get::List-Cleanup="0" 2>&1 || warn "Failed to index live media packages."
+        log "Registered live media as a temporary package source."
+    fi
+
     for deb_file in "$deb_dir"/*.deb; do
         [ -f "$deb_file" ] || continue
 
-        if dpkg -i "$deb_file" 2>&1; then
+        if apt-get install -y --no-install-recommends "$deb_file" 2>&1; then
             log "Installed external package $(basename "$deb_file")."
         else
-            warn "Failed to install $(basename "$deb_file"); attempting dependency fix."
-            if apt-get install -f -y --no-install-recommends 2>&1; then
-                log "Resolved dependencies for $(basename "$deb_file")."
+            warn "apt-get install failed for $(basename "$deb_file"); falling back to dpkg."
+            if dpkg -i "$deb_file" 2>&1; then
+                log "Installed external package $(basename "$deb_file") via dpkg."
+                apt-get install -f -y --no-install-recommends 2>&1 || \
+                    warn "Could not resolve dependencies for $(basename "$deb_file")."
             else
-                warn "Could not resolve dependencies for $(basename "$deb_file")."
+                warn "Failed to install $(basename "$deb_file")."
             fi
         fi
     done
 
+    rm -f "$cdrom_source"
     rm -rf "$deb_dir"
     log "External package installation complete."
 }
