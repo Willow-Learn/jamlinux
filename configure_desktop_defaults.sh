@@ -7,18 +7,18 @@ mkdir -p /etc/xdg /etc/skel/.config /etc/skel/.config/gtk-3.0
 
 cat > /etc/xdg/mimeapps.list <<'EOF'
 [Default Applications]
-application/xhtml+xml=chromium.desktop
-text/html=chromium.desktop
-x-scheme-handler/about=chromium.desktop
-x-scheme-handler/http=chromium.desktop
-x-scheme-handler/https=chromium.desktop
+application/xhtml+xml=thorium-browser.desktop
+text/html=thorium-browser.desktop
+x-scheme-handler/about=thorium-browser.desktop
+x-scheme-handler/http=thorium-browser.desktop
+x-scheme-handler/https=thorium-browser.desktop
 EOF
 
 cp /etc/xdg/mimeapps.list /etc/skel/.config/mimeapps.list
 
-if [ -x /usr/bin/chromium ]; then
-    update-alternatives --set x-www-browser /usr/bin/chromium 2>/dev/null || true
-    update-alternatives --set gnome-www-browser /usr/bin/chromium 2>/dev/null || true
+if [ -x /usr/bin/thorium-browser ]; then
+    update-alternatives --set x-www-browser /usr/bin/thorium-browser 2>/dev/null || true
+    update-alternatives --set gnome-www-browser /usr/bin/thorium-browser 2>/dev/null || true
 fi
 
 if [ -x /usr/bin/ptyxis ]; then

@@ -4,6 +4,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 export BUILD_DIR="$BASE_DIR/build/$(date +%Y%m%d)"
+KERNEL_PACKAGE_STUB="6.17.13+deb13"
 
 install_payload_file() {
     local source="$1"
@@ -41,7 +42,7 @@ cleanup_live_build_mounts
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-cd $BUILD_DIR
+cd "$BUILD_DIR"
 
 # Initialize for Debian Trixie
 sudo lb config \
@@ -57,13 +58,26 @@ sudo lb config \
     --iso-application "JamLinux" \
     --iso-publisher "Jamie Munro" \
     --iso-preparer "live-build" \
-    --linux-packages "linux-image linux-headers" \
+    --linux-packages "linux-image-${KERNEL_PACKAGE_STUB} linux-headers-${KERNEL_PACKAGE_STUB}" \
     --debian-installer-distribution trixie
 
 # Create all necessary directories
 mkdir -p config/{hooks/normal,hooks/binary,debian-installer,preseed,includes.chroot/etc/{skel/{.config,.local/share},dconf/db/{local.d,gdm.d},apt/{preferences.d,sources.list.d}},includes.installer,package-lists,bootloaders}
 mkdir -p config/archives
 mkdir -p config/apt
+
+# Backports source and pin — available during chroot package install phase
+# Only the kernel packages are explicitly requested from backports via --linux-packages;
+# the blanket pin at 100 prevents anything else from pulling in backports packages.
+cat > "$BUILD_DIR/config/archives/jamlinux-backports.list.chroot" <<'EOF'
+deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware
+EOF
+
+cat > "$BUILD_DIR/config/archives/jamlinux-backports.pref.chroot" <<'EOF'
+Package: *
+Pin: release a=trixie-backports
+Pin-Priority: 100
+EOF
 
 # Disable HTTP pipelining and enable retries to survive transient mirror sync
 # issues (Hash Sum mismatch) during the live-build apt-get chroot phase.
@@ -81,6 +95,7 @@ mkdir -p config/includes.chroot/etc/systemd/system
 mkdir -p config/includes.chroot/etc/systemd/system/multi-user.target.wants
 mkdir -p config/includes.chroot/var/lib/jamlinux
 
+
 mkdir -p "$BUILD_DIR/config/includes.chroot/usr/share/gnome-shell/extensions/"
 # Stage GNOME Shell extensions from the repository into the live image.
 if [[ -n "$(find "$BASE_DIR/extensions" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
@@ -91,6 +106,7 @@ fi
 
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/etc/apt/sources.list"
 cp "$BASE_DIR/sources/sources.list" "$BUILD_DIR/config/includes.chroot/usr/local/src/jamlinux/sources.list"
+cp "$BASE_DIR/sources/preferences.d/00-backports" "$BUILD_DIR/config/includes.chroot/etc/apt/preferences.d/00-backports"
 
 #package lists
 cp "$BASE_DIR/packages/base_system" "$BUILD_DIR/config/package-lists/base.list.chroot"
@@ -139,7 +155,7 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
 cp "$BASE_DIR/configure_desktop_defaults.sh" "$BUILD_DIR/config/hooks/normal/0502-defaults.hook.chroot"
 chmod +x config/hooks/normal/0502-defaults.hook.chroot
 
-#chromium defaults and policy hook
+#browser defaults and policy hook (Thorium)
 cp "$BASE_DIR/configure_chromium.sh" "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 
@@ -163,6 +179,7 @@ cp "$BASE_DIR/update_dconf.sh" "$BUILD_DIR/config/hooks/normal/0506-dconf.hook.c
 chmod +x config/hooks/normal/0506-dconf.hook.chroot
 cp "$BASE_DIR/update_dconf.sh" "$BUILD_DIR/config/includes.chroot/usr/local/bin/update_dconf.sh"
 chmod +x "$BUILD_DIR/config/includes.chroot/usr/local/bin/update_dconf.sh"
+
 
 #identity
 cp "$BASE_DIR/identity/os-release" "$BUILD_DIR/config/includes.chroot/etc/os-release"
@@ -359,8 +376,8 @@ dst="$build_root/binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs
 # fail if the expected external packages (VS Code, adw-gtk3, Ulauncher) are
 # missing — otherwise the installed system will silently lack them.
 staged_count="$(find "$src" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | wc -l)"
-if [ "$staged_count" -lt 3 ]; then
-    echo "[jamlinux binary hook] ERROR: Expected at least 3 cached external .deb files but found $staged_count in $src."
+if [ "$staged_count" -lt 4 ]; then
+    echo "[jamlinux binary hook] ERROR: Expected at least 4 cached external .deb files but found $staged_count in $src."
     echo "[jamlinux binary hook] The installed system will be missing third-party packages. Aborting build."
     exit 1
 fi
@@ -382,6 +399,7 @@ install_payload_file "$BASE_DIR/install_theme.sh" "usr/local/bin/install_theme.s
 install_payload_file "$BASE_DIR/update_dconf.sh" "usr/local/bin/update_dconf.sh"
 install_payload_file "$BASE_DIR/systemd/jamlinux-first-boot.service" "etc/systemd/system/jamlinux-first-boot.service"
 install_payload_file "$BASE_DIR/sources/sources.list" "usr/local/src/jamlinux/sources.list"
+install_payload_file "$BASE_DIR/sources/preferences.d/00-backports" "etc/apt/preferences.d/00-backports"
 install_payload_file "$BASE_DIR/grub/grub_branding.cfg" "etc/default/grub.d/99-custom.cfg"
 install_payload_file "$BASE_DIR/grub/theme.txt" "usr/share/grub/themes/jamlinux/theme.txt"
 install_payload_file "$SPLASH_PNG" "usr/share/grub/themes/jamlinux/splash.png"
@@ -411,7 +429,7 @@ cp "$BASE_DIR/cleanup_hook.sh" "$BUILD_DIR/config/hooks/normal/0900-cleanup.hook
 chmod +x "$BUILD_DIR/config/hooks/normal/0900-cleanup.hook.chroot"
 
 #build the ISO
-cd $BUILD_DIR
+cd "$BUILD_DIR"
 
 pwd
 echo "Building JamLinux ISO - this may take a while..."

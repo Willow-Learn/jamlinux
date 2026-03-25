@@ -36,6 +36,9 @@ gnome-shell-extension-manager
 flatpak
 gnome-software-plugin-flatpak
 
+# Bluetooth
+gnome-bluetooth-3.0
+
 # System utilities
 gsettings-desktop-schemas
 dconf-cli

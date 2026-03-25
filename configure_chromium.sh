@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Configuring Chromium defaults and managed policies..."
+echo "Configuring Thorium browser defaults and managed policies..."
 
-install -d -m 755 /etc/chromium/policies/managed
+# Thorium uses the same Chromium policy format
+install -d -m 755 /etc/thorium/policies/managed
 
-cat > /etc/chromium/policies/managed/10-jamlinux.json <<'EOF'
+cat > /etc/thorium/policies/managed/10-jamlinux.json <<'EOF'
 {
   "ExtensionSettings": {
     "*": {
@@ -39,53 +40,63 @@ cat > /etc/chromium/policies/managed/10-jamlinux.json <<'EOF'
       "installation_mode": "force_installed",
       "update_url": "https://clients2.google.com/service/update2/crx",
       "toolbar_pin": "force_pinned"
-    },
-    "gppongmhjkpfnbhagpmjfkannfbllamg": {
-      "installation_mode": "force_installed",
-      "update_url": "https://clients2.google.com/service/update2/crx"
     }
   },
   "RestoreOnStartup": 1,
   "HomepageIsNewTabPage": true,
-  "ShowHomeButton": true
+  "ShowHomeButton": true,
+  "DefaultSearchProviderEnabled": true,
+  "DefaultSearchProviderName": "DuckDuckGo",
+  "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}",
+  "DefaultSearchProviderKeyword": "@ddg",
+  "DefaultSearchProviderIconURL": "https://duckduckgo.com/favicon.ico",
+  "DefaultSearchProviderSuggestURL": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
+  "ManagedSearchEngines": [
+    {
+      "name": "DuckDuckGo",
+      "keyword": "@ddg",
+      "search_url": "https://duckduckgo.com/?q={searchTerms}",
+      "suggest_url": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
+      "favicon_url": "https://duckduckgo.com/favicon.ico",
+      "is_default": true
+    },
+    {
+      "name": "Google",
+      "keyword": "@g",
+      "search_url": "https://www.google.com/search?q={searchTerms}",
+      "suggest_url": "https://www.google.com/complete/search?output=chrome&q={searchTerms}",
+      "favicon_url": "https://www.google.com/favicon.ico"
+    }
+  ]
 }
 EOF
 
-chmod 644 /etc/chromium/policies/managed/10-jamlinux.json
+chmod 644 /etc/thorium/policies/managed/10-jamlinux.json
 
-if [ -f /etc/chromium/master_preferences ]; then
-    python3 - <<'PY'
-import json
-from pathlib import Path
-
-path = Path("/etc/chromium/master_preferences")
-data = json.loads(path.read_text())
-
-distribution = data.setdefault("distribution", {})
-distribution["import_bookmarks"] = True
-
-browser = data.setdefault("browser", {})
-browser["show_home_button"] = True
-
-toolbar = data.setdefault("toolbar", {})
-pinned_actions = toolbar.get("pinned_actions")
-if not isinstance(pinned_actions, list):
-    pinned_actions = []
-
-reading_mode_action = "kActionSidePanelShowReadAnything"
-if reading_mode_action not in pinned_actions:
-    pinned_actions.append(reading_mode_action)
-toolbar["pinned_actions"] = pinned_actions
-
-data["homepage"] = "chrome://newtab/"
-data["homepage_is_newtabpage"] = True
-
-path.write_text(json.dumps(data, indent=2) + "\n")
-PY
+# Thorium master_preferences
+THORIUM_DIR="/opt/chromium.org/thorium"
+if [ -d "$THORIUM_DIR" ]; then
+    cat > "$THORIUM_DIR/master_preferences" <<'EOF'
+{
+  "distribution": {
+    "import_bookmarks": true
+  },
+  "browser": {
+    "show_home_button": true
+  },
+  "toolbar": {
+    "pinned_actions": ["kActionSidePanelShowReadAnything", "kActionSplitTab"]
+  },
+  "homepage": "chrome://newtab/",
+  "homepage_is_newtabpage": true
+}
+EOF
+    chmod 644 "$THORIUM_DIR/master_preferences"
 fi
 
-install -d -m 755 /usr/share/chromium
-cat > /usr/share/chromium/initial_bookmarks.html <<'EOF'
+# Initial bookmarks
+install -d -m 755 /usr/share/thorium
+cat > /usr/share/thorium/initial_bookmarks.html <<'EOF'
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <TITLE>Bookmarks</TITLE>
@@ -98,6 +109,6 @@ cat > /usr/share/chromium/initial_bookmarks.html <<'EOF'
 </DL><p>
 EOF
 
-chmod 644 /usr/share/chromium/initial_bookmarks.html
+chmod 644 /usr/share/thorium/initial_bookmarks.html
 
-echo "Chromium defaults and policies configured."
+echo "Thorium browser defaults and policies configured."

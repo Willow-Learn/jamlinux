@@ -290,7 +290,43 @@ install_ulauncher_release() {
     fi
 }
 
-required_packages="code adw-gtk3 ulauncher"
+install_thorium() {
+    local list_file="/etc/apt/sources.list.d/thorium.list"
+    local list_url="http://dl.thorium.rocks/debian/dists/stable/thorium.list"
+
+    if package_installed thorium-browser; then
+        log "thorium-browser is already installed."
+        return 0
+    fi
+
+    if ! run_with_retries "Thorium repo list download" download_file "$list_url" "$list_file"; then
+        log "Skipping thorium-browser: could not fetch repository list."
+        return 1
+    fi
+
+    if ! run_with_retries "APT metadata refresh for Thorium" default_repo_update; then
+        log "Skipping thorium-browser: failed to refresh APT metadata."
+        return 1
+    fi
+
+    if run_with_retries "Thorium package install" repo_install "thorium-browser"; then
+        log "Installed thorium-browser from thorium.rocks repository."
+
+        # Cache the .deb for offline installer
+        local deb_path
+        deb_path="$(find /var/cache/apt/archives -maxdepth 1 -name 'thorium-browser_*.deb' -type f 2>/dev/null | head -1)"
+        if [ -n "$deb_path" ]; then
+            cache_deb "$deb_path"
+        fi
+
+        return 0
+    fi
+
+    log "Skipping thorium-browser: install failed."
+    return 1
+}
+
+required_packages="code adw-gtk3 ulauncher thorium-browser"
 failures=0
 
 mkdir -p "$download_dir"
@@ -298,6 +334,7 @@ mkdir -p "$download_dir"
 install_deb_from_url "VS Code" "code" "$vscode_deb_url" || failures=1
 install_deb_from_repo_index "Julian package repo" "adw-gtk3" "amd64" "$julian_repo_base_url" "packages" "main" || failures=1
 install_ulauncher_release || failures=1
+install_thorium || failures=1
 
 # Post-install verification: confirm every required package is installed and
 # its .deb is cached for the offline installer payload, regardless of what

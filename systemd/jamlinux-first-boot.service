@@ -6,9 +6,11 @@ ConditionPathExists=!/var/lib/jamlinux/first-boot-complete
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/local/bin/first-boot.sh
 Restart=on-failure
 RestartSec=2min
+TimeoutStartSec=600
 
 [Install]
 WantedBy=multi-user.target

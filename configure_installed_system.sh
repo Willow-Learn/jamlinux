@@ -118,13 +118,13 @@ apply_shell_theme() {
     /usr/local/bin/install_theme.sh || warn "Theme activation failed."
 }
 
-apply_chromium_defaults() {
+apply_browser_defaults() {
     if [ ! -x /usr/local/bin/configure_chromium.sh ]; then
-        warn "Chromium configuration script is missing."
+        warn "Browser configuration script is missing."
         return
     fi
 
-    /usr/local/bin/configure_chromium.sh || warn "Chromium configuration failed."
+    /usr/local/bin/configure_chromium.sh || warn "Browser configuration failed."
 }
 
 seed_files_bookmarks() {
@@ -181,7 +181,7 @@ main() {
     seed_primary_sources
     ensure_login_keyring_pam
     enable_first_boot_service
-    apply_chromium_defaults || warn "Chromium defaults step failed."
+    apply_browser_defaults || warn "Browser defaults step failed."
     seed_files_bookmarks || warn "Bookmarks step failed."
     apply_dconf_databases || warn "dconf step failed."
     apply_shell_theme || warn "Theme step failed."

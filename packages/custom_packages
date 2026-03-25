@@ -160,9 +160,7 @@ udev
 util-linux
 util-linux-extra
 unzip
-vim-common
-vim-tiny
-wamerican
+vim
 whiptail
 wtmpdb
 xz-utils
@@ -195,21 +193,26 @@ firmware-amd-graphics
 firmware-atheros
 firmware-linux
 firmware-linux-nonfree
+firmware-iwlwifi
+firmware-misc-nonfree
+firmware-realtek
 firmware-sof-signed
+intel-microcode
 lm-sensors
 laptop-detect
 mesa-utils
+mesa-vdpau-drivers
 pciutils
 power-profiles-daemon
 thermald
 usbutils
 vulkan-tools
 ntfs-3g
+libdvd-pkg
 
 # Networking and remote access
 avahi-daemon
-bind9-dnsutils
-bind9-host
+bluez
 curl
 dnsutils
 ifupdown
@@ -223,10 +226,10 @@ netcat-traditional
 network-manager
 network-manager-gnome
 network-manager-openconnect-gnome
+network-manager-l2tp-gnome
 network-manager-openvpn-gnome
 nftables
 openssh-client
-openssh-server
 smbclient
 syncthing
 tcpdump
@@ -237,7 +240,7 @@ wireguard-tools
 wsdd2
 
 # GNOME desktop and theming
-chromium
+# chromium — replaced by thorium-browser (installed via install_external_packages.sh)
 cups-pk-helper
 dconf-cli
 deja-dup
@@ -246,11 +249,14 @@ earlyoom
 file-roller
 flatpak
 fonts-croscore
+fonts-dejavu-core
 fonts-inter
 fonts-jetbrains-mono
 fonts-liberation2
+fonts-noto-cjk
 fonts-noto-color-emoji
 fonts-noto-core
+fonts-noto-extra
 gufw
 gnome-core
 gnome-software-plugin-fwupd
@@ -267,7 +273,10 @@ gir1.2-gtop-2.0
 gvfs-backends
 libpam-gnome-keyring
 fwupd
+gdebi
+gnome-characters
 gnome-user-share
+gparted
 keepassxc-full
 remmina
 seahorse
@@ -276,6 +285,7 @@ bolt
 fprintd
 simple-scan
 sane-airscan
+printer-driver-all
 system-config-printer
 yaru-theme-icon
 yaru-theme-sound
@@ -298,7 +308,12 @@ gstreamer1.0-libav
 gstreamer1.0-plugins-bad
 gstreamer1.0-plugins-good
 gstreamer1.0-plugins-ugly
+gstreamer1.0-pulseaudio
+gstreamer1.0-vaapi
+gstreamer1.0-gl
 libavcodec-extra
+libtumbler-1-0
+mesa-va-drivers
 libspa-0.2-bluetooth
 media-types
 obs-studio
@@ -309,6 +324,7 @@ pipewire-pulse
 sound-theme-freedesktop
 torbrowser-launcher
 transmission-gtk
+p7zip-full
 unrar-free
 vlc
 wireplumber
@@ -348,7 +364,6 @@ docker-compose
 docker.io
 fd-find
 fzf
-gcc
 gdb
 gettext
 git
@@ -372,7 +387,6 @@ patchelf
 php-cli
 podman
 podman-compose
-pkg-config
 pkgconf
 python3
 python3-dev
@@ -389,7 +403,6 @@ ruby-full
 rsync
 rustc
 shellcheck
-snapper
 sudo
 tmux
 tree
@@ -401,7 +414,8 @@ btrfs-assistant
 zsh
 gnome-multi-writer
 
-# Voice
+# Accessibility
+orca
 speech-dispatcher
 speech-dispatcher-espeak-ng
 espeak-ng
