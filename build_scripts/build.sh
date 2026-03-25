@@ -77,6 +77,7 @@ cat > "$BUILD_DIR/config/archives/jamlinux-backports.pref.chroot" <<'EOF'
 Package: *
 Pin: release a=trixie-backports
 Pin-Priority: 100
+
 EOF
 
 # Disable HTTP pipelining and enable retries to survive transient mirror sync
@@ -155,7 +156,7 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
 cp "$BASE_DIR/configure_desktop_defaults.sh" "$BUILD_DIR/config/hooks/normal/0502-defaults.hook.chroot"
 chmod +x config/hooks/normal/0502-defaults.hook.chroot
 
-#browser defaults and policy hook (Thorium)
+#browser defaults and policy hook (Google Chrome)
 cp "$BASE_DIR/configure_chromium.sh" "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 

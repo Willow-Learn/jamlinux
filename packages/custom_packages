@@ -240,7 +240,8 @@ wireguard-tools
 wsdd2
 
 # GNOME desktop and theming
-# chromium — replaced by thorium-browser (installed via install_external_packages.sh)
+# google-chrome-stable — installed via install_external_packages.sh
+firefox-esr
 cups-pk-helper
 dconf-cli
 deja-dup

@@ -5,7 +5,7 @@
 enabled-extensions=['dash-to-dock@micxgx.gmail.com', 'monitor@astraext.github.io', 'caffeine@patapon.info', 'simplebreakreminder@castillodel.com','blur-my-shell@aunetx', 'copyous@boerdereinar.dev', 'emoji-copy@felipeftn', 'lilypad@shendrew.github.io', 'pip-on-top@rafostar.github.com',  'color-picker@tuberry', 'another-window-session-manager@gmail.com', 'gnome-fuzzy-app-search@gnome-shell-extensions.Czarlie.gitlab.com', 'tiling-assistant@leleat-on-github', 'simple-timer@majortomvr.github.com', 'places-menu@gnome-shell-extensions.gcampax.github.com']
 
 # favourite apps 
-favorite-apps=['thorium-browser.desktop', 'org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Calculator.desktop', 'code.desktop', 'com.spotify.Client.desktop', 'libreoffice-startcenter.desktop', 'steam.desktop']
+favorite-apps=['google-chrome-stable.desktop', 'org.gnome.Ptyxis.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Calculator.desktop', 'code.desktop', 'com.spotify.Client.desktop', 'libreoffice-startcenter.desktop', 'steam.desktop']
 
 # Window Management
 [org/gnome/desktop/wm/preferences]

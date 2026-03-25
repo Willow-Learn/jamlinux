@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "Configuring Thorium browser defaults and managed policies..."
+echo "Configuring Google Chrome defaults and managed policies..."
 
-# Thorium uses the same Chromium policy format
-install -d -m 755 /etc/thorium/policies/managed
+# Chrome reads managed policies from /etc/opt/chrome/policies/managed/
+install -d -m 755 /etc/opt/chrome/policies/managed
 
-cat > /etc/thorium/policies/managed/10-jamlinux.json <<'EOF'
+cat > /etc/opt/chrome/policies/managed/10-jamlinux.json <<'EOF'
 {
   "ExtensionSettings": {
     "*": {
@@ -71,12 +71,12 @@ cat > /etc/thorium/policies/managed/10-jamlinux.json <<'EOF'
 }
 EOF
 
-chmod 644 /etc/thorium/policies/managed/10-jamlinux.json
+chmod 644 /etc/opt/chrome/policies/managed/10-jamlinux.json
 
-# Thorium master_preferences
-THORIUM_DIR="/opt/chromium.org/thorium"
-if [ -d "$THORIUM_DIR" ]; then
-    cat > "$THORIUM_DIR/master_preferences" <<'EOF'
+# Chrome master_preferences
+CHROME_DIR="/opt/google/chrome"
+if [ -d "$CHROME_DIR" ]; then
+    cat > "$CHROME_DIR/master_preferences" <<'EOF'
 {
   "distribution": {
     "import_bookmarks": true
@@ -91,12 +91,12 @@ if [ -d "$THORIUM_DIR" ]; then
   "homepage_is_newtabpage": true
 }
 EOF
-    chmod 644 "$THORIUM_DIR/master_preferences"
+    chmod 644 "$CHROME_DIR/master_preferences"
 fi
 
 # Initial bookmarks
-install -d -m 755 /usr/share/thorium
-cat > /usr/share/thorium/initial_bookmarks.html <<'EOF'
+install -d -m 755 /usr/share/google-chrome
+cat > /usr/share/google-chrome/initial_bookmarks.html <<'EOF'
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <TITLE>Bookmarks</TITLE>
@@ -109,6 +109,6 @@ cat > /usr/share/thorium/initial_bookmarks.html <<'EOF'
 </DL><p>
 EOF
 
-chmod 644 /usr/share/thorium/initial_bookmarks.html
+chmod 644 /usr/share/google-chrome/initial_bookmarks.html
 
-echo "Thorium browser defaults and policies configured."
+echo "Google Chrome defaults and policies configured."

@@ -7,18 +7,18 @@ mkdir -p /etc/xdg /etc/skel/.config /etc/skel/.config/gtk-3.0
 
 cat > /etc/xdg/mimeapps.list <<'EOF'
 [Default Applications]
-application/xhtml+xml=thorium-browser.desktop
-text/html=thorium-browser.desktop
-x-scheme-handler/about=thorium-browser.desktop
-x-scheme-handler/http=thorium-browser.desktop
-x-scheme-handler/https=thorium-browser.desktop
+application/xhtml+xml=google-chrome-stable.desktop
+text/html=google-chrome-stable.desktop
+x-scheme-handler/about=google-chrome-stable.desktop
+x-scheme-handler/http=google-chrome-stable.desktop
+x-scheme-handler/https=google-chrome-stable.desktop
 EOF
 
 cp /etc/xdg/mimeapps.list /etc/skel/.config/mimeapps.list
 
-if [ -x /usr/bin/thorium-browser ]; then
-    update-alternatives --set x-www-browser /usr/bin/thorium-browser 2>/dev/null || true
-    update-alternatives --set gnome-www-browser /usr/bin/thorium-browser 2>/dev/null || true
+if [ -x /usr/bin/google-chrome-stable ]; then
+    update-alternatives --set x-www-browser /usr/bin/google-chrome-stable 2>/dev/null || true
+    update-alternatives --set gnome-www-browser /usr/bin/google-chrome-stable 2>/dev/null || true
 fi
 
 if [ -x /usr/bin/ptyxis ]; then
@@ -44,7 +44,7 @@ HandleLidSwitchDocked=suspend
 EOF
 
 packages_to_purge=()
-for package in firefox firefox-esr gnome-shell-extension-user-theme gnome-terminal gnome-terminal-data nautilus-extension-gnome-terminal; do
+for package in firefox gnome-shell-extension-user-theme gnome-terminal gnome-terminal-data nautilus-extension-gnome-terminal; do
     if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then
         packages_to_purge+=("$package")
     fi

@@ -3,7 +3,7 @@ Aiming to be a polished daily-driver desktop based on Debian Stable. Designed to
    
 The goal is to have strong out-the-box hardware support, all the applications you need, a full development stack, and be ready-to-go for gaming and multimedia.   
     
-Running on Kernel version 6.19
+Running on Kernel version 6.17.13.
      
 Opinionated Gnome 3 desktop environment, optimised for British English. 
    
