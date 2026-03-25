@@ -11,6 +11,13 @@ FLATPAK_APPS=(
     com.discordapp.Discord
     com.slack.Slack
     us.zoom.Zoom
+    org.openshot.OpenShot
+    com.ozmartians.VidCutter
+    com.github.tchx84.Flatseal
+    io.dbeaver.DBeaverCommunity
+    com.github.johnfactotum.Foliate
+    org.signal.Signal
+    com.meetfranz.Franz
 )
 
 # External .deb package sources

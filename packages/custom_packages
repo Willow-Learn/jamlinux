@@ -1,6 +1,5 @@
 # Core system and boot
 adduser
-amd64-microcode
 apt
 apt-listchanges
 apt-utils
@@ -25,7 +24,6 @@ debconf-i18n
 debian-archive-keyring
 debian-faq
 debianutils
-debootstrap
 diffutils
 dosfstools
 dpkg
@@ -44,7 +42,6 @@ keyboard-configuration
 kmod
 less
 libacl1
-libapt-pkg7.0
 libattr1
 libaudit-common
 libaudit1
@@ -108,7 +105,6 @@ libsmartcols1
 libss2
 libssl3t64
 libstdc++6
-libsystemd-shared
 libsystemd0
 libtext-charwidth-perl
 libtext-iconv-perl
@@ -126,7 +122,6 @@ linux-image-amd64
 linux-sysctl-defaults
 locales
 login
-login.defs
 logrotate
 logsave
 lsof
@@ -168,6 +163,7 @@ zlib1g
 zstd
 
 # Live build and installer
+debootstrap
 grub-common
 grub-efi-amd64
 installation-report
@@ -190,14 +186,7 @@ dhcpcd-base
 dmidecode
 exfatprogs
 firmware-amd-graphics
-firmware-atheros
-firmware-linux
-firmware-linux-nonfree
-firmware-iwlwifi
-firmware-misc-nonfree
-firmware-realtek
 firmware-sof-signed
-intel-microcode
 lm-sensors
 laptop-detect
 mesa-utils
@@ -209,10 +198,14 @@ usbutils
 vulkan-tools
 ntfs-3g
 
+# System monitoring and health
+smartmontools
+testdisk
+
 # Networking and remote access
 avahi-daemon
 bluez
-curl
+drawing
 dnsutils
 ifupdown
 inetutils-telnet
@@ -229,22 +222,25 @@ network-manager-l2tp-gnome
 network-manager-openvpn-gnome
 nftables
 openssh-client
+openssh-server
 smbclient
 syncthing
 tcpdump
 traceroute
-wget
 whois
+wl-clipboard
 wireguard-tools
 wsdd2
 
 # GNOME desktop and theming
 chromium
+cups
 cups-pk-helper
 dconf-cli
 deja-dup
 desktop-base
 earlyoom
+evince
 file-roller
 flatpak
 fonts-croscore
@@ -265,7 +261,7 @@ gnome-sound-recorder
 gnome-keyring
 gnome-tweaks
 gpg
-gir1.2-gda-5.0 
+gir1.2-gda-5.0
 gir1.2-gsound-1.0
 iotop
 gir1.2-gtop-2.0
@@ -273,13 +269,15 @@ gvfs-backends
 libpam-gnome-keyring
 fwupd
 gdebi
+devhelp
+ghex
 gnome-characters
+gnome-maps
 gnome-user-share
 gparted
-keepassxc-full
+keepassxc
 remmina
 seahorse
-flatseal
 bolt
 fprintd
 simple-scan
@@ -315,8 +313,11 @@ libtumbler-1-0
 mesa-va-drivers
 libspa-0.2-bluetooth
 media-types
+audacity
+mediainfo
 obs-studio
 pavucontrol
+shotwell
 pipewire-bin
 pipewire-audio
 pipewire-pulse
@@ -330,17 +331,27 @@ wireplumber
 zip
 
 # Creative and office applications
+calibre
 gimp
 aspell-en
+dict
+dict-gcide
+dict-wn
+dictd
 hunspell-en-gb
 hyphen-en-gb
+imagemagick
 inkscape
 libgsf-bin
+pandoc
+texlive-base
+texlive-latex-recommended
 libreoffice-calc
 libreoffice-gnome
 libreoffice-gtk3
 libreoffice-help-en-gb
 libreoffice-l10n-en-gb
+libreoffice-draw
 libreoffice-impress
 libreoffice-writer
 mythes-en-us
@@ -357,8 +368,8 @@ cmake
 composer
 cpanminus
 default-jdk
-default-jre
 direnv
+manpages-dev
 docker-compose
 docker.io
 fd-find
@@ -367,6 +378,7 @@ gdb
 gettext
 git
 git-lfs
+httpie
 golang-go
 gradle
 groff-base
@@ -377,39 +389,56 @@ libnautilus-extension-dev
 lua5.4
 luarocks
 maven
+meld
 meson
-nano
 ninja-build
 nodejs
 npm
 patchelf
 php-cli
-podman
-podman-compose
+php-curl
+php-fpm
+php-mbstring
+php-mysql
+php-pgsql
+php-xml
+php-zip
 pkgconf
+apache2
+mariadb-server
+ncdu
+nginx
+postgresql
 python3
+ipython3
 python3-dev
+python3-django
+python3-flask
+python3-matplotlib
+python3-numpy
+python3-pandas
+python3-pillow
 python3-pip
+python3-scipy
+python3-sqlalchemy
 python3-venv
 qemu-system-gui
 qemu-system-x86
 qemu-utils
 r-base
 rclone
-restic
+redis-server
 ripgrep
 ruby-full
+sqlite3
 rsync
-rustc
 shellcheck
+strace
 sudo
 tmux
 tree
-timeshift
-valgrind
 virt-manager
 libvirt-daemon-system
-btrfs-assistant
 zsh
 gnome-multi-writer
 

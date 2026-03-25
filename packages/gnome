@@ -1,14 +1,11 @@
 # Core GNOME
-gnome-core
 gnome-shell
 gnome-session
 gnome-session-bin
 gdm3
-gnome-tweaks
 
 # GNOME apps
 evolution
-gnome-software
 ptyxis
 gnome-text-editor
 gnome-calculator
@@ -32,16 +29,11 @@ gnome-browser-connector
 # Extension management
 gnome-shell-extension-manager
 
-# Flatpak integration
-flatpak
-gnome-software-plugin-flatpak
-
 # Bluetooth
 gnome-bluetooth-3.0
 
 # System utilities
 gsettings-desktop-schemas
-dconf-cli
 dconf-editor
 glib-networking
 wmctrl
