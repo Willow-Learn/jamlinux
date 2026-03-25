@@ -141,6 +141,16 @@ install_adw-gtk3() {
 
 # ---------------------------------------------------------------------------
 
+install_libdvd() {
+    if package_installed libdvd-pkg; then
+        log "libdvd-pkg is already installed."
+        return 0
+    fi
+
+    apt-get install -y libdvd-pkg
+    dpkg-reconfigure -f noninteractive libdvd-pkg
+}
+
 ensure_apt_sources() {
     local staged="/usr/local/src/jamlinux/sources.list"
 
@@ -260,6 +270,13 @@ main() {
         log "External package installation complete."
     else
         log "External package installation incomplete — will retry on next boot."
+        all_ok=false
+    fi
+
+    if install_libdvd; then
+        log "libdvd-pkg installation complete."
+    else
+        log "libdvd-pkg installation failed — DVD playback may not work."
         all_ok=false
     fi
 

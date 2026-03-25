@@ -156,7 +156,7 @@ chmod +x "$BUILD_DIR/config/hooks/normal/0501b-default-avatar.hook.chroot"
 cp "$BASE_DIR/configure_desktop_defaults.sh" "$BUILD_DIR/config/hooks/normal/0502-defaults.hook.chroot"
 chmod +x config/hooks/normal/0502-defaults.hook.chroot
 
-#browser defaults and policy hook (Google Chrome)
+#chromium defaults and policy hook
 cp "$BASE_DIR/configure_chromium.sh" "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 chmod +x "$BUILD_DIR/config/hooks/normal/0502b-chromium.hook.chroot"
 
@@ -377,8 +377,8 @@ dst="$build_root/binary/jamlinux-installer/rootfs/var/lib/jamlinux/external-debs
 # fail if the expected external packages (VS Code, adw-gtk3, Ulauncher) are
 # missing — otherwise the installed system will silently lack them.
 staged_count="$(find "$src" -maxdepth 1 -name "*.deb" -type f 2>/dev/null | wc -l)"
-if [ "$staged_count" -lt 4 ]; then
-    echo "[jamlinux binary hook] ERROR: Expected at least 4 cached external .deb files but found $staged_count in $src."
+if [ "$staged_count" -lt 3 ]; then
+    echo "[jamlinux binary hook] ERROR: Expected at least 3 cached external .deb files but found $staged_count in $src."
     echo "[jamlinux binary hook] The installed system will be missing third-party packages. Aborting build."
     exit 1
 fi

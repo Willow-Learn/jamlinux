@@ -290,9 +290,7 @@ install_ulauncher_release() {
     fi
 }
 
-chrome_deb_url="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-
-required_packages="code adw-gtk3 ulauncher google-chrome-stable"
+required_packages="code adw-gtk3 ulauncher"
 failures=0
 
 mkdir -p "$download_dir"
@@ -300,7 +298,6 @@ mkdir -p "$download_dir"
 install_deb_from_url "VS Code" "code" "$vscode_deb_url" || failures=1
 install_deb_from_repo_index "Julian package repo" "adw-gtk3" "amd64" "$julian_repo_base_url" "packages" "main" || failures=1
 install_ulauncher_release || failures=1
-install_deb_from_url "Google Chrome" "google-chrome-stable" "$chrome_deb_url" || failures=1
 
 # Post-install verification: confirm every required package is installed and
 # its .deb is cached for the offline installer payload, regardless of what

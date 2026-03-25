@@ -208,7 +208,6 @@ thermald
 usbutils
 vulkan-tools
 ntfs-3g
-libdvd-pkg
 
 # Networking and remote access
 avahi-daemon
@@ -240,8 +239,7 @@ wireguard-tools
 wsdd2
 
 # GNOME desktop and theming
-# google-chrome-stable — installed via install_external_packages.sh
-firefox-esr
+chromium
 cups-pk-helper
 dconf-cli
 deja-dup

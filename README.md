@@ -3,7 +3,7 @@ Aiming to be a polished daily-driver desktop based on Debian Stable. Designed to
    
 The goal is to have strong out-the-box hardware support, all the applications you need, a full development stack, and be ready-to-go for gaming and multimedia.   
     
-Running on Kernel version 6.17.13.
+Running on Kernel version 6.18.15.
      
 Opinionated Gnome 3 desktop environment, optimised for British English. 
    
@@ -41,13 +41,12 @@ qemu-system-x86_64 \
 - better wallpapers / slideshow?
 - grub branding
 - ulauncher extensions
-- different browser instead of chrome?
 - different shell instead of bash?
 - update manager:
   - detect apt get updates and alert users (probably easy)
   - update to latest "JamLinux" version (harder)
 - remove "via AWSM" from reboot/power menu
-- ananicy-cpp
-- nvidia drivers (needs older kernel or newer drivers)
+- ananicy/ananicy-cpp
+- nvidia drivers (https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/debian.html)
 - establish deidcated jamlinux debian mirror with external packages included so we can remove messy 3rd party installations
 
