@@ -47,6 +47,5 @@ qemu-system-x86_64 \
   - update to latest "JamLinux" version (harder)
 - remove "via AWSM" from reboot/power menu
 - ananicy/ananicy-cpp
-- nvidia drivers (https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/debian.html)
 - establish deidcated jamlinux debian mirror with external packages included so we can remove messy 3rd party installations
 

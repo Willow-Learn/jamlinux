@@ -8,77 +8,42 @@ install -d -m 755 /etc/chromium/policies/managed
 cat > /etc/chromium/policies/managed/10-jamlinux.json <<'EOF'
 {
   "ExtensionSettings": {
-    "*": {
-      "toolbar_pin": "force_unpinned"
-    },
     "ddkjiahejlhfcafbddmgiahcphecmpfh": {
-      "installation_mode": "force_installed",
+      "installation_mode": "normal_installed",
       "update_url": "https://clients2.google.com/service/update2/crx"
     },
     "pkehgijcmpdhfbdbbnkijodmdjhbjlgp": {
-      "installation_mode": "force_installed",
+      "installation_mode": "normal_installed",
       "update_url": "https://clients2.google.com/service/update2/crx"
     },
     "ldpochfccmkkmhdbclfhpagapcfdljkj": {
-      "installation_mode": "force_installed",
-      "update_url": "https://clients2.google.com/service/update2/crx"
-    },
-    "kceglpglilklghkgofolieongaolnaob": {
-      "installation_mode": "force_installed",
+      "installation_mode": "normal_installed",
       "update_url": "https://clients2.google.com/service/update2/crx"
     },
     "noogafoofpebimajpfpamcfhoaifemoa": {
-      "installation_mode": "force_installed",
+      "installation_mode": "normal_installed",
       "update_url": "https://clients2.google.com/service/update2/crx"
     },
     "mnjggcdmjocbbbhaepdhchncahnbgone": {
-      "installation_mode": "force_installed",
+      "installation_mode": "normal_installed",
       "update_url": "https://clients2.google.com/service/update2/crx"
     },
     "edacconmaakjimmfgnblocblbcdcpbko": {
-      "installation_mode": "force_installed",
-      "update_url": "https://clients2.google.com/service/update2/crx",
-      "toolbar_pin": "force_pinned"
+      "installation_mode": "normal_installed",
+      "update_url": "https://clients2.google.com/service/update2/crx"
     }
-  },
-  "RestoreOnStartup": 1,
-  "HomepageIsNewTabPage": true,
-  "ShowHomeButton": true,
-  "DefaultSearchProviderEnabled": true,
-  "DefaultSearchProviderName": "DuckDuckGo",
-  "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}",
-  "DefaultSearchProviderKeyword": "@ddg",
-  "DefaultSearchProviderIconURL": "https://duckduckgo.com/favicon.ico",
-  "DefaultSearchProviderSuggestURL": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
-  "ManagedSearchEngines": [
-    {
-      "name": "DuckDuckGo",
-      "keyword": "@ddg",
-      "search_url": "https://duckduckgo.com/?q={searchTerms}",
-      "suggest_url": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
-      "favicon_url": "https://duckduckgo.com/favicon.ico",
-      "is_default": true
-    },
-    {
-      "name": "Google",
-      "keyword": "@g",
-      "search_url": "https://www.google.com/search?q={searchTerms}",
-      "suggest_url": "https://www.google.com/complete/search?output=chrome&q={searchTerms}",
-      "favicon_url": "https://www.google.com/favicon.ico"
-    }
-  ]
+  }
 }
 EOF
 
 chmod 644 /etc/chromium/policies/managed/10-jamlinux.json
 
-if [ -f /etc/chromium/master_preferences ]; then
-    python3 - <<'PY'
+python3 - <<'PY'
 import json
 from pathlib import Path
 
 path = Path("/etc/chromium/master_preferences")
-data = json.loads(path.read_text())
+data = json.loads(path.read_text()) if path.exists() else {}
 
 distribution = data.setdefault("distribution", {})
 distribution["import_bookmarks"] = True
@@ -99,9 +64,11 @@ toolbar["pinned_actions"] = pinned_actions
 data["homepage"] = "chrome://newtab/"
 data["homepage_is_newtabpage"] = True
 
+session = data.setdefault("session", {})
+session["restore_on_startup"] = 1
+
 path.write_text(json.dumps(data, indent=2) + "\n")
 PY
-fi
 
 install -d -m 755 /usr/share/chromium
 cat > /usr/share/chromium/initial_bookmarks.html <<'EOF'
