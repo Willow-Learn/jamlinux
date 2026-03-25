@@ -17,7 +17,6 @@ FLATPAK_APPS=(
     io.dbeaver.DBeaverCommunity
     com.github.johnfactotum.Foliate
     org.signal.Signal
-    com.meetfranz.Franz
 )
 
 # External .deb package sources
