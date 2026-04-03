@@ -21,7 +21,7 @@ chown root:root /usr/share/gnome-shell/extensions -R 2>/dev/null || true
 # We manipulate symlinks directly because systemctl may not function
 # correctly inside a live-build chroot (no running systemd).  This
 # ensures services are disabled on the live CD and on the installed system.
-SERVICES_TO_DISABLE="apache2 containerd cups dictd docker mariadb nginx postgresql redis-server ssh"
+SERVICES_TO_DISABLE="apache2 avahi-daemon containerd cups dictd docker libvirtd mariadb nginx postgresql redis-server ssh syncthing wsdd2"
 
 for svc in $SERVICES_TO_DISABLE; do
     if [ -f "/lib/systemd/system/${svc}.service" ]; then
