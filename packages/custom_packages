@@ -376,6 +376,7 @@ fd-find
 fzf
 gdb
 gettext
+gh
 git
 git-lfs
 httpie

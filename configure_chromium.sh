@@ -7,6 +7,15 @@ install -d -m 755 /etc/chromium/policies/managed
 
 cat > /etc/chromium/policies/managed/10-jamlinux.json <<'EOF'
 {
+  "ApplicationLocaleValue": "en-GB",
+  "ForcedLanguages": [
+    "en-GB",
+    "en-US"
+  ],
+  "SpellcheckLanguage": [
+    "en-GB",
+    "en-US"
+  ],
   "ExtensionSettings": {
     "ddkjiahejlhfcafbddmgiahcphecmpfh": {
       "installation_mode": "normal_installed",
@@ -50,6 +59,12 @@ distribution["import_bookmarks"] = True
 
 browser = data.setdefault("browser", {})
 browser["show_home_button"] = True
+
+intl = data.setdefault("intl", {})
+intl["accept_languages"] = "en-GB,en-US,en"
+
+spellcheck = data.setdefault("spellcheck", {})
+spellcheck["dictionaries"] = ["en-GB", "en-US"]
 
 toolbar = data.setdefault("toolbar", {})
 pinned_actions = toolbar.get("pinned_actions")

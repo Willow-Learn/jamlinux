@@ -6,11 +6,14 @@ echo "Configuring British English locale defaults..."
 if ! grep -qx 'en_GB.UTF-8 UTF-8' /etc/locale.gen; then
     echo 'en_GB.UTF-8 UTF-8' >> /etc/locale.gen
 fi
+if ! grep -qx 'en_US.UTF-8 UTF-8' /etc/locale.gen; then
+    echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+fi
 
-locale-gen en_GB.UTF-8
+locale-gen en_GB.UTF-8 en_US.UTF-8
 update-locale \
     LANG=en_GB.UTF-8 \
-    LANGUAGE=en_GB:en \
+    LANGUAGE=en_GB:en_US:en \
     LC_ADDRESS=en_GB.UTF-8 \
     LC_MESSAGES=en_GB.UTF-8 \
     LC_NUMERIC=en_GB.UTF-8 \
