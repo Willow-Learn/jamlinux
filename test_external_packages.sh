@@ -25,6 +25,7 @@ SKIP=0
 
 ULAUNCHER_DEB_URL="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 VSCODE_DEB_URL="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+LINUX_WIFI_HOTSPOT_DEB_URL="https://github.com/lakinduakash/linux-wifi-hotspot/releases/download/v4.7.2/linux-wifi-hotspot_4.7.2_amd64.deb"
 JULIAN_REPO_BASE_URL="https://julianfairfax.codeberg.page/package-repo/debs"
 # Julian Fairfax does not publish a standalone GPG key; the repo is used with
 # trusted=yes in first-boot.sh. The package index and .deb download are tested
@@ -66,6 +67,12 @@ if curl -fsSL --max-time 15 --head --output /dev/null \
     pass "Ulauncher GitHub release URL is reachable"
 else
     fail "Ulauncher GitHub release URL is unreachable"
+fi
+
+if curl -fsSL --max-time 15 --head --output /dev/null "$LINUX_WIFI_HOTSPOT_DEB_URL"; then
+    pass "Linux WiFi Hotspot GitHub release URL is reachable"
+else
+    fail "Linux WiFi Hotspot GitHub release URL is unreachable"
 fi
 
 if curl -fsSL --max-time 15 --output /dev/null \
@@ -149,6 +156,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Build-time path: Linux WiFi Hotspot
+# ---------------------------------------------------------------------------
+
+section "Build-time path: Linux WiFi Hotspot"
+
+LINUX_WIFI_HOTSPOT_DEB="$WORK_DIR/linux-wifi-hotspot.deb"
+if curl -fsSL --max-time 60 --output "$LINUX_WIFI_HOTSPOT_DEB" "$LINUX_WIFI_HOTSPOT_DEB_URL" \
+        && dpkg-deb --info "$LINUX_WIFI_HOTSPOT_DEB" >/dev/null 2>&1; then
+    LINUX_WIFI_HOTSPOT_VERSION="$(dpkg-deb --field "$LINUX_WIFI_HOTSPOT_DEB" Version)"
+    pass "Linux WiFi Hotspot .deb downloaded and valid (version: $LINUX_WIFI_HOTSPOT_VERSION)"
+else
+    fail "Linux WiFi Hotspot .deb download or validation failed"
+fi
+
+# ---------------------------------------------------------------------------
 # Optional: full install + removal
 # ---------------------------------------------------------------------------
 
@@ -159,10 +181,11 @@ if [[ "$INSTALL_MODE" == true ]]; then
         skip "Install tests require sudo"
     else
 
-    for PKG_NAME in adw-gtk3 code ulauncher; do
+    for PKG_NAME in adw-gtk3 code ulauncher linux-wifi-hotspot; do
         DEB_MAP_adw_gtk3="$WORK_DIR/adw-gtk3.deb"
         DEB_MAP_code="$VSCODE_DEB"
         DEB_MAP_ulauncher="$ULAUNCHER_DEB"
+        DEB_MAP_linux_wifi_hotspot="$LINUX_WIFI_HOTSPOT_DEB"
 
         VAR="DEB_MAP_${PKG_NAME//-/_}"
         DEB_PATH="${!VAR}"

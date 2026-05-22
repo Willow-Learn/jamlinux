@@ -207,11 +207,15 @@ avahi-daemon
 bluez
 drawing
 dnsutils
+dnsmasq-base
+hostapd
 ifupdown
 inetutils-telnet
 iproute2
 iputils-ping
+iw
 krb5-locales
+libqrencode4
 mtr-tiny
 nmap
 netcat-traditional

@@ -25,9 +25,10 @@ FLATPAK_APPS=(
 # with retries and verifies installation afterwards.
 ULAUNCHER_DEB_URL="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 VSCODE_DEB_URL="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+LINUX_WIFI_HOTSPOT_DEB_URL="https://github.com/lakinduakash/linux-wifi-hotspot/releases/download/v4.7.2/linux-wifi-hotspot_4.7.2_amd64.deb"
 JULIAN_REPO_URL="https://julianfairfax.codeberg.page/package-repo/debs"
 
-EXTERNAL_PACKAGES=(ulauncher code adw-gtk3)
+EXTERNAL_PACKAGES=(ulauncher code adw-gtk3 linux-wifi-hotspot)
 
 MAX_ATTEMPTS="${JAMLINUX_FIRST_BOOT_RETRY_ATTEMPTS:-4}"
 INITIAL_RETRY_DELAY="${JAMLINUX_FIRST_BOOT_RETRY_DELAY:-15}"
@@ -72,6 +73,20 @@ find_cached_deb() {
     local pkg="$1"
     find "$DEB_CACHE_DIR" -maxdepth 1 \( -name "${pkg}_*.deb" -o -name "${pkg}.deb" \) \
         -type f 2>/dev/null | head -1
+}
+
+configure_linux_wifi_hotspot_wrapper() {
+    local wrapper="/usr/bin/wihotspot"
+
+    if [ -f "$wrapper" ]; then
+        cat > "$wrapper" <<'EOF'
+#!/bin/sh
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+exec /usr/bin/wihotspot-gui
+EOF
+        chmod 0755 "$wrapper"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -145,6 +160,26 @@ install_adw-gtk3() {
     return $rc
 }
 
+install_linux-wifi-hotspot() {
+    local cached
+    cached="$(find_cached_deb linux-wifi-hotspot)"
+
+    if [ -n "$cached" ]; then
+        log "Installing linux-wifi-hotspot from cache: $(basename "$cached")"
+        if apt-get install -y --no-install-recommends "$cached"; then
+            return 0
+        fi
+        log "Cache install failed for linux-wifi-hotspot; downloading."
+    fi
+
+    local tmp="/var/tmp/jamlinux-linux-wifi-hotspot.deb"
+    curl -fsSL --retry 3 --retry-all-errors --output "$tmp" "$LINUX_WIFI_HOTSPOT_DEB_URL"
+    apt-get install -y --no-install-recommends "$tmp"
+    local rc=$?
+    rm -f "$tmp"
+    return $rc
+}
+
 # ---------------------------------------------------------------------------
 
 install_libdvd() {
@@ -197,6 +232,8 @@ install_external_packages() {
             failures=$((failures + 1))
         fi
     done
+
+    configure_linux_wifi_hotspot_wrapper
 
     if [ "$failures" -gt 0 ]; then
         log "$failures external package(s) failed."

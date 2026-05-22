@@ -7,6 +7,7 @@ download_dir="/var/tmp/jamlinux-external-packages"
 deb_cache_dir="/var/lib/jamlinux/external-debs"
 ulauncher_deb_url="https://github.com/Ulauncher/Ulauncher/releases/download/5.15.15/ulauncher_5.15.15_all.deb"
 vscode_deb_url="https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+linux_wifi_hotspot_deb_url="https://github.com/lakinduakash/linux-wifi-hotspot/releases/download/v4.7.2/linux-wifi-hotspot_4.7.2_amd64.deb"
 julian_repo_base_url="https://julianfairfax.codeberg.page/package-repo/debs"
 max_attempts="${JAMLINUX_EXTERNAL_RETRY_ATTEMPTS:-4}"
 initial_retry_delay="${JAMLINUX_EXTERNAL_RETRY_DELAY:-10}"
@@ -89,6 +90,20 @@ install_local_deb() {
     local deb_path="$1"
 
     apt-get install -y --no-install-recommends "$deb_path"
+}
+
+configure_linux_wifi_hotspot_wrapper() {
+    local wrapper="/usr/bin/wihotspot"
+
+    if [ -f "$wrapper" ]; then
+        cat > "$wrapper" <<'EOF'
+#!/bin/sh
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+exec /usr/bin/wihotspot-gui
+EOF
+        chmod 0755 "$wrapper"
+    fi
 }
 
 cache_deb() {
@@ -290,7 +305,7 @@ install_ulauncher_release() {
     fi
 }
 
-required_packages="code adw-gtk3 ulauncher"
+required_packages="code adw-gtk3 ulauncher linux-wifi-hotspot"
 failures=0
 
 mkdir -p "$download_dir"
@@ -298,6 +313,8 @@ mkdir -p "$download_dir"
 install_deb_from_url "VS Code" "code" "$vscode_deb_url" || failures=1
 install_deb_from_repo_index "Julian package repo" "adw-gtk3" "amd64" "$julian_repo_base_url" "packages" "main" || failures=1
 install_ulauncher_release || failures=1
+install_deb_from_url "Linux WiFi Hotspot" "linux-wifi-hotspot" "$linux_wifi_hotspot_deb_url" || failures=1
+configure_linux_wifi_hotspot_wrapper
 
 # Post-install verification: confirm every required package is installed and
 # its .deb is cached for the offline installer payload, regardless of what
