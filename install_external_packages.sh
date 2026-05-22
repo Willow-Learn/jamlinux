@@ -99,7 +99,7 @@ configure_linux_wifi_hotspot_wrapper() {
         cat > "$wrapper" <<'EOF'
 #!/bin/sh
 
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+export PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 exec /usr/bin/wihotspot-gui
 EOF
         chmod 0755 "$wrapper"
