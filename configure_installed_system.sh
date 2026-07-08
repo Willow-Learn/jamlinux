@@ -95,6 +95,102 @@ enable_first_boot_service() {
     log "Enabled jamlinux-first-boot.service."
 }
 
+disable_unit() {
+    local unit="$1"
+    local systemd_dir
+
+    for systemd_dir in /etc/systemd/system /run/systemd/system /lib/systemd/system /usr/lib/systemd/system; do
+        [ -d "$systemd_dir" ] || continue
+        find "$systemd_dir" -type l \
+            \( -path "*.wants/${unit}" -o -path "*.requires/${unit}" \) \
+            -delete
+    done
+
+    rm -f "/etc/systemd/system/${unit}"
+    log "Disabled ${unit}."
+}
+
+mask_unit() {
+    local unit="$1"
+
+    disable_unit "$unit"
+    ln -sf /dev/null "/etc/systemd/system/${unit}"
+    log "Masked ${unit}."
+}
+
+apply_boot_unit_policy() {
+    local svc sock alias unit
+    local services_to_disable="
+apache2
+avahi-daemon
+containerd
+cups
+cups-browsed
+dictd
+docker
+iscsid
+ksmbd
+libvirt-guests
+libvirtd
+mariadb
+ModemManager
+nginx
+NetworkManager-wait-online
+open-iscsi
+openvpn
+postgresql
+redis-server
+ssh
+strongswan-starter
+syncthing
+tor
+tor@default
+virtlockd
+virtlogd
+wsdd2
+"
+    local sockets_to_disable="
+docker
+iscsid
+libvirtd
+libvirtd-admin
+libvirtd-ro
+virtlockd
+virtlockd-admin
+virtlogd
+virtlogd-admin
+"
+    local aliases_to_disable="
+dbus-org.freedesktop.ModemManager1.service
+iscsi.service
+ipsec.service
+"
+    local units_to_mask="
+plymouth-quit-wait.service
+"
+
+    for svc in $services_to_disable; do
+        disable_unit "${svc}.service"
+    done
+
+    for sock in $sockets_to_disable; do
+        disable_unit "${sock}.socket"
+    done
+
+    for alias in $aliases_to_disable; do
+        disable_unit "$alias"
+    done
+
+    for unit in $units_to_mask; do
+        mask_unit "$unit"
+    done
+
+    for unit in /lib/systemd/system/php*-fpm.service; do
+        [ -e "$unit" ] || continue
+        disable_unit "$(basename "$unit")"
+    done
+}
+
 apply_dconf_databases() {
     if [ -x /usr/local/bin/update_dconf.sh ]; then
         /usr/local/bin/update_dconf.sh || warn "dconf database refresh failed."
@@ -181,6 +277,7 @@ main() {
     seed_primary_sources
     ensure_login_keyring_pam
     enable_first_boot_service
+    apply_boot_unit_policy
     apply_browser_defaults || warn "Browser defaults step failed."
     seed_files_bookmarks || warn "Bookmarks step failed."
     apply_dconf_databases || warn "dconf step failed."

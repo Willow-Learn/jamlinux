@@ -1,7 +1,5 @@
 [Unit]
 Description=Run JamLinux first-boot tasks
-Wants=network-online.target
-After=network-online.target
 ConditionPathExists=!/var/lib/jamlinux/first-boot-complete
 
 [Service]
